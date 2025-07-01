@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Package, Key, Shield, Eye, Gift, RotateCcw } from 'lucide-react';
+import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -11,7 +11,7 @@ import { ItemDetails, UserDetails, OwnershipDetails, ContractType } from '../typ
 import { getContract, OWNERSHIP_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
 
 export const UserPage: React.FC = () => {
-  const { provider, account, address, isConnected } = useWallet();
+  const { provider, account, address, isConnected, connectWallet } = useWallet();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'register' | 'dashboard' | 'verify'>('register');
   
@@ -28,11 +28,17 @@ export const UserPage: React.FC = () => {
   const [verifyItemId, setVerifyItemId] = useState('');
   const [ownershipDetails, setOwnershipDetails] = useState<OwnershipDetails | null>(null);
 
-  const registerUser = async () => {
+  const requireWalletConnection = () => {
     if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
+      toast.error('Please connect your wallet to continue');
+      connectWallet();
+      return false;
     }
+    return true;
+  };
+
+  const registerUser = async () => {
+    if (!requireWalletConnection()) return;
 
     if (!username.trim()) {
       toast.error('Please enter a username');
@@ -63,10 +69,7 @@ export const UserPage: React.FC = () => {
   };
 
   const loadUserItems = async () => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
+    if (!requireWalletConnection()) return;
 
     setLoading(true);
     try {
@@ -95,6 +98,8 @@ export const UserPage: React.FC = () => {
   };
 
   const generateTransferCode = async () => {
+    if (!requireWalletConnection()) return;
+
     if (!transferItemId || !transferToAddress) {
       toast.error('Please fill in all fields');
       return;
@@ -128,6 +133,8 @@ export const UserPage: React.FC = () => {
   };
 
   const revokeTransferCode = async () => {
+    if (!requireWalletConnection()) return;
+
     if (!revokeItemHash) {
       toast.error('Please enter item hash');
       return;
@@ -198,13 +205,34 @@ export const UserPage: React.FC = () => {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               User Dashboard
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400">
+            <p className="text-xl text-slate-300">
               Register, manage your items, and verify product ownership
             </p>
           </div>
+
+          {/* Wallet Connection Warning for actions that require it */}
+          {!isConnected && (activeTab === 'register' || activeTab === 'dashboard') && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <Card className="bg-amber-500/10 border-amber-500/30">
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400" />
+                  <p className="text-amber-300">
+                    Connect your wallet to access user features and manage your items.
+                  </p>
+                  <Button onClick={connectWallet} size="sm" variant="outline">
+                    Connect Wallet
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Tabs */}
           <div className="flex flex-wrap justify-center mb-8 gap-4">
@@ -215,15 +243,23 @@ export const UserPage: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300
+                    flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 relative
                     ${activeTab === tab.id
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-white/10 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 hover:bg-white/20 dark:hover:bg-slate-800/50'
+                      ? 'text-white' 
+                      : 'text-slate-400 hover:text-purple-400'
                     }
                   `}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{tab.label}</span>
+                  {activeTab === tab.id && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl"
+                      layoutId="activeUserTab"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      style={{ zIndex: -1 }}
+                    />
+                  )}
                 </button>
               );
             })}
@@ -239,11 +275,11 @@ export const UserPage: React.FC = () => {
             >
               <Card className="max-w-2xl mx-auto">
                 <div className="text-center mb-6">
-                  <User className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  <User className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+                  <h2 className="text-2xl font-bold text-white">
                     Register as User
                   </h2>
-                  <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  <p className="text-slate-300 mt-2">
                     Create your user account to manage and verify product ownership
                   </p>
                 </div>
@@ -286,11 +322,11 @@ export const UserPage: React.FC = () => {
               <Card>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center">
-                      <Package className="w-8 h-8 mr-3 text-blue-500" />
+                    <h2 className="text-2xl font-bold text-white flex items-center">
+                      <Package className="w-8 h-8 mr-3 text-purple-400" />
                       My Items
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                    <p className="text-slate-300 mt-2">
                       View and manage your owned products
                     </p>
                   </div>
@@ -309,20 +345,20 @@ export const UserPage: React.FC = () => {
                     {userItems.map((item, index) => (
                       <div
                         key={index}
-                        className="border border-white/20 dark:border-slate-700/50 rounded-xl p-4"
+                        className="border border-purple-500/20 rounded-xl p-4"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-white">
+                            <h3 className="font-semibold text-white">
                               {item.name}
                             </h3>
-                            <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400 mt-2">
+                            <div className="space-y-1 text-sm text-slate-300 mt-2">
                               <p>ID: {item.item_id}</p>
                               <p>Serial: {item.serial}</p>
                               <p>Manufacturer: {item.manufacturer}</p>
                             </div>
                           </div>
-                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                          <div className="text-sm text-slate-300">
                             <p>Production Date: {item.date}</p>
                             <p className="truncate" title={item.metadata_hash}>
                               Metadata Hash: {item.metadata_hash}
@@ -338,11 +374,11 @@ export const UserPage: React.FC = () => {
               {/* Transfer Ownership */}
               <Card>
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
-                    <Gift className="w-6 h-6 mr-2 text-blue-500" />
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <Gift className="w-6 h-6 mr-2 text-purple-400" />
                     Transfer Ownership
                   </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  <p className="text-slate-300 mt-2">
                     Generate a transfer code to gift your item to another user
                   </p>
                 </div>
@@ -381,11 +417,11 @@ export const UserPage: React.FC = () => {
               {/* Revoke Transfer Code */}
               <Card>
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
-                    <RotateCcw className="w-6 h-6 mr-2 text-red-500" />
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <RotateCcw className="w-6 h-6 mr-2 text-red-400" />
                     Revoke Transfer Code
                   </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  <p className="text-slate-300 mt-2">
                     Cancel a previously generated transfer code
                   </p>
                 </div>
@@ -428,12 +464,12 @@ export const UserPage: React.FC = () => {
               <div className="grid lg:grid-cols-2 gap-8">
                 <Card>
                   <div className="mb-6">
-                    <Shield className="w-8 h-8 text-blue-500 mb-4" />
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                    <Shield className="w-8 h-8 text-purple-400 mb-4" />
+                    <h2 className="text-2xl font-bold text-white">
                       Verify Ownership
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
-                      Enter an item ID to verify its current ownership details
+                    <p className="text-slate-300 mt-2">
+                      Enter an item ID to verify its current ownership details (no wallet required)
                     </p>
                   </div>
 
@@ -463,39 +499,39 @@ export const UserPage: React.FC = () => {
 
                 {ownershipDetails && (
                   <Card>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+                    <h3 className="text-xl font-bold text-white mb-4">
                       Ownership Details
                     </h3>
                     <div className="space-y-3">
-                      <div className="bg-white/10 dark:bg-slate-900/30 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-slate-400">
                           Item Name
                         </label>
-                        <p className="text-slate-800 dark:text-white font-semibold">
+                        <p className="text-white font-semibold">
                           {ownershipDetails.name}
                         </p>
                       </div>
-                      <div className="bg-white/10 dark:bg-slate-900/30 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-slate-400">
                           Item ID
                         </label>
-                        <p className="text-slate-800 dark:text-white font-semibold">
+                        <p className="text-white font-semibold">
                           {ownershipDetails.item_id}
                         </p>
                       </div>
-                      <div className="bg-white/10 dark:bg-slate-900/30 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-slate-400">
                           Owner Username
                         </label>
-                        <p className="text-slate-800 dark:text-white font-semibold">
+                        <p className="text-white font-semibold">
                           {ownershipDetails.username}
                         </p>
                       </div>
-                      <div className="bg-white/10 dark:bg-slate-900/30 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      <div className="bg-slate-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-slate-400">
                           Owner Address
                         </label>
-                        <p className="text-slate-800 dark:text-white font-mono text-sm break-all">
+                        <p className="text-white font-mono text-sm break-all">
                           {ownershipDetails.owner}
                         </p>
                       </div>

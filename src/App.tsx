@@ -25,7 +25,7 @@ function App() {
   return (
     <ThemeProvider>
       <WalletProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-900/20 dark:to-purple-900/20 transition-colors duration-300">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 transition-colors duration-300">
           <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
           <main>{renderCurrentPage()}</main>
           
@@ -40,7 +40,7 @@ function App() {
             draggable
             pauseOnHover
             theme="dark"
-            toastClassName="backdrop-blur-xl bg-slate-800/90 border border-slate-700/50"
+            toastClassName="backdrop-blur-xl bg-slate-800/90 border border-purple-500/30"
           />
         </div>
       </WalletProvider>

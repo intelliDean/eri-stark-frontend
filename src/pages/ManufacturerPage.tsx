@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Upload, FileText, Shield, Plus, Download } from 'lucide-react';
+import { Building2, Upload, FileText, Shield, Plus, Download, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 import { typedData } from 'starknet';
@@ -15,7 +15,7 @@ import { getContract, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString, he
 import { getTypedData } from '../utils/certificateData';
 
 export const ManufacturerPage: React.FC = () => {
-  const { provider, account, address, isConnected } = useWallet();
+  const { provider, account, address, isConnected, connectWallet } = useWallet();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'register' | 'single' | 'bulk'>('register');
   
@@ -35,11 +35,17 @@ export const ManufacturerPage: React.FC = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [certificateResults, setCertificateResults] = useState<CertificateResult[]>([]);
 
-  const registerManufacturer = async () => {
+  const requireWalletConnection = () => {
     if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
+      toast.error('Please connect your wallet to continue');
+      connectWallet();
+      return false;
     }
+    return true;
+  };
+
+  const registerManufacturer = async () => {
+    if (!requireWalletConnection()) return;
 
     if (!manufacturerName.trim()) {
       toast.error('Please enter manufacturer name');
@@ -69,10 +75,7 @@ export const ManufacturerPage: React.FC = () => {
   };
 
   const signAndVerifySingleCertificate = async () => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
+    if (!requireWalletConnection()) return;
 
     if (!certificate.name || !certificate.unique_id || !certificate.serial) {
       toast.error('Please fill in all required fields');
@@ -139,10 +142,7 @@ export const ManufacturerPage: React.FC = () => {
       return;
     }
 
-    if (!isConnected) {
-      toast.error('Connect wallet before uploading CSV');
-      return;
-    }
+    if (!requireWalletConnection()) return;
 
     Papa.parse(file, {
       header: true,
@@ -201,6 +201,8 @@ export const ManufacturerPage: React.FC = () => {
   };
 
   const processMultipleCertificates = async () => {
+    if (!requireWalletConnection()) return;
+
     if (certificates.length === 0) {
       toast.error('No certificates to process');
       return;
@@ -286,13 +288,34 @@ export const ManufacturerPage: React.FC = () => {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Manufacturer Dashboard
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400">
+            <p className="text-xl text-slate-300">
               Register, create, and verify product certificates on the blockchain
             </p>
           </div>
+
+          {/* Wallet Connection Warning */}
+          {!isConnected && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <Card className="bg-amber-500/10 border-amber-500/30">
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400" />
+                  <p className="text-amber-300">
+                    Connect your wallet to access manufacturer features and create certificates.
+                  </p>
+                  <Button onClick={connectWallet} size="sm" variant="outline">
+                    Connect Wallet
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Tabs */}
           <div className="flex flex-wrap justify-center mb-8 gap-4">
@@ -303,15 +326,23 @@ export const ManufacturerPage: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300
+                    flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 relative
                     ${activeTab === tab.id
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-white/10 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 hover:bg-white/20 dark:hover:bg-slate-800/50'
+                      ? 'text-white' 
+                      : 'text-slate-400 hover:text-purple-400'
                     }
                   `}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{tab.label}</span>
+                  {activeTab === tab.id && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl"
+                      layoutId="activeManufacturerTab"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      style={{ zIndex: -1 }}
+                    />
+                  )}
                 </button>
               );
             })}
@@ -327,11 +358,11 @@ export const ManufacturerPage: React.FC = () => {
             >
               <Card className="max-w-2xl mx-auto">
                 <div className="text-center mb-6">
-                  <Building2 className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+                  <h2 className="text-2xl font-bold text-white">
                     Register as Manufacturer
                   </h2>
-                  <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  <p className="text-slate-300 mt-2">
                     Register your company on the blockchain to start creating verified certificates
                   </p>
                 </div>
@@ -372,11 +403,11 @@ export const ManufacturerPage: React.FC = () => {
               <div className="grid lg:grid-cols-2 gap-8">
                 <Card>
                   <div className="mb-6">
-                    <FileText className="w-8 h-8 text-blue-500 mb-4" />
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                    <FileText className="w-8 h-8 text-purple-400 mb-4" />
+                    <h2 className="text-2xl font-bold text-white">
                       Create Certificate
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">
+                    <p className="text-slate-300 mt-2">
                       Create and verify a single product certificate
                     </p>
                   </div>
@@ -443,11 +474,11 @@ export const ManufacturerPage: React.FC = () => {
             >
               <Card className="mb-8">
                 <div className="mb-6">
-                  <Upload className="w-8 h-8 text-blue-500 mb-4" />
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  <Upload className="w-8 h-8 text-purple-400 mb-4" />
+                  <h2 className="text-2xl font-bold text-white">
                     Bulk Certificate Upload
                   </h2>
-                  <p className="text-slate-600 dark:text-slate-400 mt-2">
+                  <p className="text-slate-300 mt-2">
                     Upload a CSV file with multiple certificates to process in batch
                   </p>
                 </div>
@@ -460,7 +491,7 @@ export const ManufacturerPage: React.FC = () => {
                   className="space-y-6"
                 >
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Upload CSV File
                     </label>
                     <Input
@@ -469,14 +500,14 @@ export const ManufacturerPage: React.FC = () => {
                       onChange={handleFileUpload}
                       className="cursor-pointer"
                     />
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                    <p className="text-sm text-slate-400 mt-2">
                       CSV should contain columns: name, unique_id, serial, metadata
                     </p>
                   </div>
 
                   {certificates.length > 0 && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-                      <p className="text-blue-800 dark:text-blue-200 font-medium">
+                    <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+                      <p className="text-purple-300 font-medium">
                         {certificates.length} certificates loaded and ready for processing
                       </p>
                     </div>
@@ -498,7 +529,7 @@ export const ManufacturerPage: React.FC = () => {
               {certificateResults.length > 0 && (
                 <Card>
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                    <h3 className="text-xl font-bold text-white">
                       Processing Results
                     </h3>
                     <Button
@@ -515,17 +546,17 @@ export const ManufacturerPage: React.FC = () => {
                     {certificateResults.map((result, index) => (
                       <div
                         key={result.certificate.id || index}
-                        className="border border-white/20 dark:border-slate-700/50 rounded-xl p-4"
+                        className="border border-purple-500/20 rounded-xl p-4"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white mb-2">
+                            <h4 className="font-semibold text-white mb-2">
                               {result.certificate.name}
                             </h4>
-                            <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                            <div className="space-y-1 text-sm text-slate-300">
                               <p>ID: {result.certificate.id}</p>
                               <p>Serial: {result.certificate.serial}</p>
-                              <p className={`font-medium ${result.verificationResult ? 'text-green-600' : 'text-red-600'}`}>
+                              <p className={`font-medium ${result.verificationResult ? 'text-green-400' : 'text-red-400'}`}>
                                 Status: {result.verificationResult ? 'Verified' : 'Failed'}
                                 {result.error && ` - ${result.error}`}
                               </p>

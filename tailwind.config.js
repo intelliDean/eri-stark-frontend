@@ -10,6 +10,7 @@ export default {
       animation: {
         'gradient': 'gradient 8s linear infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         gradient: {
@@ -24,15 +25,23 @@ export default {
         },
         glow: {
           '0%': {
-            'box-shadow': '0 0 5px #3B82F6, 0 0 10px #3B82F6, 0 0 15px #3B82F6',
+            'box-shadow': '0 0 5px #7c3aed, 0 0 10px #7c3aed, 0 0 15px #7c3aed',
           },
           '100%': {
-            'box-shadow': '0 0 10px #8B5CF6, 0 0 20px #8B5CF6, 0 0 30px #8B5CF6',
+            'box-shadow': '0 0 10px #06b6d4, 0 0 20px #06b6d4, 0 0 30px #06b6d4',
           }
         }
       },
       backdropBlur: {
         xs: '2px',
+      },
+      colors: {
+        primary: {
+          50: '#f0f9ff',
+          500: '#7c3aed',
+          600: '#7c3aed',
+          700: '#6d28d9',
+        }
       }
     },
   },

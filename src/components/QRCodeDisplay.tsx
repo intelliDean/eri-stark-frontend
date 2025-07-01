@@ -30,8 +30,8 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
         transition={{ duration: 0.5 }}
       >
         <div className="flex items-center justify-center mb-4">
-          <Shield className="w-6 h-6 text-blue-500 mr-2" />
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+          <Shield className="w-6 h-6 text-purple-400 mr-2" />
+          <h3 className="text-lg font-semibold text-white">
             {label}
           </h3>
         </div>
@@ -40,14 +40,14 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
           <QRCodeCanvas
             value={data}
             size={300}
-            fgColor="#1e3a8a"
+            fgColor="#7c3aed"
             bgColor="#ffffff"
             level="M"
             className="rounded-lg"
           />
         </div>
 
-        <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 mb-4">
+        <p className="mt-4 text-sm text-slate-300 mb-4">
           Scan to verify product authenticity
         </p>
 

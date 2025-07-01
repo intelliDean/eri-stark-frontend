@@ -22,9 +22,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isConnected = !!address;
 
+  // Remove auto-connect on load - let users explore first
   useEffect(() => {
-    // Auto-connect wallet on load
-    connectWallet();
+    // Initialize with default provider for read-only operations
+    setProvider(PROVIDER);
   }, []);
 
   const connectWallet = async (): Promise<void> => {

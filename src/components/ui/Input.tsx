@@ -29,11 +29,10 @@ export const Input: React.FC<InputProps> = ({
       accept={accept}
       className={`
         w-full p-4 rounded-xl 
-        bg-white/10 dark:bg-slate-900/50 
-        border border-white/20 dark:border-slate-700/50 
-        text-slate-900 dark:text-white 
-        placeholder-slate-500 dark:placeholder-slate-400
-        focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent
+        bg-slate-800/50 dark:bg-slate-900/60 
+        border border-purple-500/20 dark:border-purple-400/20 
+        text-white placeholder-slate-400
+        focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50
         transition-all duration-300
         ${className}
       `}

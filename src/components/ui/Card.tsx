@@ -11,10 +11,10 @@ export const Card: React.FC<CardProps> = ({ children, className = '', hover = tr
   return (
     <motion.div
       className={`
-        backdrop-blur-xl bg-white/10 dark:bg-slate-800/30 
-        border border-white/20 dark:border-slate-700/50 
+        backdrop-blur-xl bg-slate-800/30 dark:bg-slate-900/40 
+        border border-purple-500/20 dark:border-purple-400/20 
         rounded-2xl p-6 shadow-xl
-        ${hover ? 'hover:shadow-2xl hover:bg-white/20 dark:hover:bg-slate-800/40' : ''}
+        ${hover ? 'hover:shadow-2xl hover:bg-slate-800/40 dark:hover:bg-slate-900/50 hover:border-purple-500/30' : ''}
         transition-all duration-300
         ${className}
       `}
