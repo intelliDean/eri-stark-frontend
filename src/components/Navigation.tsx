@@ -1,25 +1,26 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, User, Building2, Sun, Moon, Menu, X } from 'lucide-react';
+import { Shield, Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWallet } from '../contexts/WalletContext';
 import { Button } from './ui/Button';
 
 interface NavigationProps {
-  currentPage: 'landing' | 'manufacturer' | 'user';
-  onPageChange: (page: 'landing' | 'manufacturer' | 'user') => void;
+  currentPage: 'landing' | 'manufacturer' | 'user' | 'qr-scan';
+  onPageChange: (page: 'landing' | 'manufacturer' | 'user' | 'qr-scan') => void;
+  onToggleSidebar?: () => void;
+  showSidebarToggle?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
+export const Navigation: React.FC<NavigationProps> = ({ 
+  currentPage, 
+  onPageChange, 
+  onToggleSidebar,
+  showSidebarToggle = false 
+}) => {
   const { isDark, toggleTheme } = useTheme();
   const { address, isConnected, connectWallet, disconnectWallet } = useWallet();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { id: 'landing', label: 'Home', icon: Shield },
-    { id: 'manufacturer', label: 'Manufacturer', icon: Building2 },
-    { id: 'user', label: 'User', icon: User },
-  ];
 
   const handleWalletClick = () => {
     if (isConnected) {
@@ -30,52 +31,36 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
   };
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/20 dark:bg-slate-950/30 border-b border-purple-500/20 dark:border-purple-400/20">
+    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-black/20 border-b border-green-500/20">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <motion.div
-            className="flex items-center space-x-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <div className="relative">
-              <Shield className="w-8 h-8 text-purple-400" />
-              <div className="absolute inset-0 w-8 h-8 bg-purple-400/20 rounded-full blur-md"></div>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              ERI
-            </span>
-          </motion.div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onPageChange(item.id as any)}
-                  className={`
-                    flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 relative group
-                    ${currentPage === item.id 
-                      ? 'text-purple-400' 
-                      : 'text-slate-300 hover:text-purple-400'
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                  {currentPage === item.id && (
-                    <motion.div
-                      className="absolute inset-0 bg-purple-500/10 rounded-lg border border-purple-500/20"
-                      layoutId="activeTab"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
+          {/* Left side */}
+          <div className="flex items-center space-x-4">
+            {/* Sidebar toggle */}
+            {showSidebarToggle && (
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 rounded-lg text-green-400 hover:bg-green-500/10 transition-colors duration-300"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+            
+            {/* Logo */}
+            <motion.div
+              className="flex items-center space-x-2 cursor-pointer"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => onPageChange('landing')}
+            >
+              <div className="relative">
+                <Shield className="w-8 h-8 text-green-400" />
+                <div className="absolute inset-0 w-8 h-8 bg-green-400/20 rounded-full blur-md animate-pulse"></div>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
+                ERI
+              </span>
+            </motion.div>
           </div>
 
           {/* Right side controls */}
@@ -83,7 +68,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-slate-300 hover:text-purple-400 hover:bg-purple-500/10 transition-all duration-300"
+              className="p-2 rounded-lg text-gray-300 hover:text-green-400 hover:bg-green-500/10 transition-all duration-300"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -104,7 +89,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-300 hover:text-purple-400"
+              className="md:hidden p-2 rounded-lg text-gray-300 hover:text-green-400"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -117,44 +102,20 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChang
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-purple-500/20 py-4"
+            className="md:hidden border-t border-green-500/20 py-4"
           >
-            <div className="space-y-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      onPageChange(item.id as any);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`
-                      w-full flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300
-                      ${currentPage === item.id 
-                        ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                        : 'text-slate-300 hover:text-purple-400 hover:bg-purple-500/5'
-                      }
-                    `}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-              <div className="pt-2 border-t border-purple-500/20">
-                <Button
-                  onClick={handleWalletClick}
-                  variant={isConnected ? 'secondary' : 'primary'}
-                  size="sm"
-                  className="w-full"
-                >
-                  {isConnected 
-                    ? `${address!.slice(0, 6)}...${address!.slice(-4)}` 
-                    : 'Connect Wallet'
-                  }
-                </Button>
-              </div>
+            <div className="pt-2">
+              <Button
+                onClick={handleWalletClick}
+                variant={isConnected ? 'secondary' : 'primary'}
+                size="sm"
+                className="w-full"
+              >
+                {isConnected 
+                  ? `${address!.slice(0, 6)}...${address!.slice(-4)}` 
+                  : 'Connect Wallet'
+                }
+              </Button>
             </div>
           </motion.div>
         )}

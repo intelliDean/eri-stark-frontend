@@ -22,6 +22,9 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
     }
   };
 
+  // Create QR scan URL
+  const qrScanUrl = `${window.location.origin}/#/qr-scan?data=${encodeURIComponent(data)}`;
+
   return (
     <Card className="text-center">
       <motion.div
@@ -30,7 +33,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
         transition={{ duration: 0.5 }}
       >
         <div className="flex items-center justify-center mb-4">
-          <Shield className="w-6 h-6 text-purple-400 mr-2" />
+          <Shield className="w-6 h-6 text-green-400 mr-2" />
           <h3 className="text-lg font-semibold text-white">
             {label}
           </h3>
@@ -38,28 +41,34 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
         
         <div className="relative inline-block p-4 bg-white rounded-xl shadow-inner">
           <QRCodeCanvas
-            value={data}
+            value={qrScanUrl}
             size={300}
-            fgColor="#7c3aed"
+            fgColor="#059669"
             bgColor="#ffffff"
             level="M"
             className="rounded-lg"
           />
         </div>
 
-        <p className="mt-4 text-sm text-slate-300 mb-4">
-          Scan to verify product authenticity
+        <p className="mt-4 text-sm text-gray-300 mb-4">
+          Scan to verify product authenticity and ownership
         </p>
 
-        <Button
-          onClick={downloadQRCode}
-          variant="outline"
-          size="sm"
-          className="mt-2"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Download QR Code
-        </Button>
+        <div className="space-y-2">
+          <Button
+            onClick={downloadQRCode}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download QR Code
+          </Button>
+          
+          <p className="text-xs text-gray-400">
+            QR code contains verification URL for easy scanning
+          </p>
+        </div>
       </motion.div>
     </Card>
   );

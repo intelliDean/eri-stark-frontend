@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Upload, FileText, Shield, Plus, Download, AlertCircle } from 'lucide-react';
+import { Building2, Upload, FileText, Shield, Download, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 import { typedData } from 'starknet';
@@ -11,7 +11,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { QRCodeDisplay } from '../components/QRCodeDisplay';
 import { useWallet } from '../contexts/WalletContext';
 import { Certificate, CertificateResult, ContractType } from '../types';
-import { getContract, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
+import { getContract, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString } from '../utils/blockchain';
 import { getTypedData } from '../utils/certificateData';
 
 export const ManufacturerPage: React.FC = () => {
@@ -288,10 +288,10 @@ export const ManufacturerPage: React.FC = () => {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               Manufacturer Dashboard
             </h1>
-            <p className="text-xl text-slate-300">
+            <p className="text-xl text-gray-300">
               Register, create, and verify product certificates on the blockchain
             </p>
           </div>
@@ -329,7 +329,7 @@ export const ManufacturerPage: React.FC = () => {
                     flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 relative
                     ${activeTab === tab.id
                       ? 'text-white' 
-                      : 'text-slate-400 hover:text-purple-400'
+                      : 'text-gray-400 hover:text-green-400'
                     }
                   `}
                 >
@@ -337,7 +337,7 @@ export const ManufacturerPage: React.FC = () => {
                   <span>{tab.label}</span>
                   {activeTab === tab.id && (
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl"
+                      className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl"
                       layoutId="activeManufacturerTab"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       style={{ zIndex: -1 }}
@@ -358,11 +358,11 @@ export const ManufacturerPage: React.FC = () => {
             >
               <Card className="max-w-2xl mx-auto">
                 <div className="text-center mb-6">
-                  <Building2 className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+                  <Building2 className="w-12 h-12 mx-auto mb-4 text-green-400" />
                   <h2 className="text-2xl font-bold text-white">
                     Register as Manufacturer
                   </h2>
-                  <p className="text-slate-300 mt-2">
+                  <p className="text-gray-300 mt-2">
                     Register your company on the blockchain to start creating verified certificates
                   </p>
                 </div>
@@ -403,11 +403,11 @@ export const ManufacturerPage: React.FC = () => {
               <div className="grid lg:grid-cols-2 gap-8">
                 <Card>
                   <div className="mb-6">
-                    <FileText className="w-8 h-8 text-purple-400 mb-4" />
+                    <FileText className="w-8 h-8 text-green-400 mb-4" />
                     <h2 className="text-2xl font-bold text-white">
                       Create Certificate
                     </h2>
-                    <p className="text-slate-300 mt-2">
+                    <p className="text-gray-300 mt-2">
                       Create and verify a single product certificate
                     </p>
                   </div>
@@ -474,11 +474,11 @@ export const ManufacturerPage: React.FC = () => {
             >
               <Card className="mb-8">
                 <div className="mb-6">
-                  <Upload className="w-8 h-8 text-purple-400 mb-4" />
+                  <Upload className="w-8 h-8 text-green-400 mb-4" />
                   <h2 className="text-2xl font-bold text-white">
                     Bulk Certificate Upload
                   </h2>
-                  <p className="text-slate-300 mt-2">
+                  <p className="text-gray-300 mt-2">
                     Upload a CSV file with multiple certificates to process in batch
                   </p>
                 </div>
@@ -491,7 +491,7 @@ export const ManufacturerPage: React.FC = () => {
                   className="space-y-6"
                 >
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Upload CSV File
                     </label>
                     <Input
@@ -500,14 +500,14 @@ export const ManufacturerPage: React.FC = () => {
                       onChange={handleFileUpload}
                       className="cursor-pointer"
                     />
-                    <p className="text-sm text-slate-400 mt-2">
+                    <p className="text-sm text-gray-400 mt-2">
                       CSV should contain columns: name, unique_id, serial, metadata
                     </p>
                   </div>
 
                   {certificates.length > 0 && (
-                    <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
-                      <p className="text-purple-300 font-medium">
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                      <p className="text-green-300 font-medium">
                         {certificates.length} certificates loaded and ready for processing
                       </p>
                     </div>
@@ -546,14 +546,14 @@ export const ManufacturerPage: React.FC = () => {
                     {certificateResults.map((result, index) => (
                       <div
                         key={result.certificate.id || index}
-                        className="border border-purple-500/20 rounded-xl p-4"
+                        className="border border-green-500/20 rounded-xl p-4"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <h4 className="font-semibold text-white mb-2">
                               {result.certificate.name}
                             </h4>
-                            <div className="space-y-1 text-sm text-slate-300">
+                            <div className="space-y-1 text-sm text-gray-300">
                               <p>ID: {result.certificate.id}</p>
                               <p>Serial: {result.certificate.serial}</p>
                               <p className={`font-medium ${result.verificationResult ? 'text-green-400' : 'text-red-400'}`}>

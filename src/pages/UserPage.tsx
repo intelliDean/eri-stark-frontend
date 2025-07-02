@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -7,7 +7,7 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useWallet } from '../contexts/WalletContext';
-import { ItemDetails, UserDetails, OwnershipDetails, ContractType } from '../types';
+import { ItemDetails, OwnershipDetails, ContractType } from '../types';
 import { getContract, OWNERSHIP_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
 
 export const UserPage: React.FC = () => {
@@ -23,10 +23,18 @@ export const UserPage: React.FC = () => {
   const [transferItemId, setTransferItemId] = useState('');
   const [transferToAddress, setTransferToAddress] = useState('');
   const [revokeItemHash, setRevokeItemHash] = useState('');
+  const [claimCode, setClaimCode] = useState('');
   
   // Verification state
   const [verifyItemId, setVerifyItemId] = useState('');
   const [ownershipDetails, setOwnershipDetails] = useState<OwnershipDetails | null>(null);
+
+  // Auto-load user items when dashboard is accessed and wallet is connected
+  useEffect(() => {
+    if (activeTab === 'dashboard' && isConnected && userItems.length === 0) {
+      loadUserItems();
+    }
+  }, [activeTab, isConnected]);
 
   const requireWalletConnection = () => {
     if (!isConnected) {
@@ -88,7 +96,9 @@ export const UserPage: React.FC = () => {
       }));
 
       setUserItems(items);
-      toast.success(`Loaded ${items.length} items`);
+      if (items.length > 0) {
+        toast.success(`Loaded ${items.length} items`);
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";
       toast.error(`Failed to load items: ${message}`);
@@ -127,6 +137,40 @@ export const UserPage: React.FC = () => {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";
       toast.error(`Failed to generate transfer code: ${message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const claimOwnershipWithCode = async () => {
+    if (!requireWalletConnection()) return;
+
+    if (!claimCode) {
+      toast.error('Please enter claim code');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
+      
+      const feltItemHash = claimCode.startsWith('0x') ? claimCode : '0x' + claimCode;
+      
+      const res = await contract.new_owner_claim_ownership(feltItemHash);
+      const txHash = res?.transaction_hash;
+      const txResult = await provider!.waitForTransaction(txHash);
+      const events = contract.parseEvents(txResult);
+
+      const newOwner = events[0]["eri::events::EriEvents::OwnershipClaimed"].new_owner;
+      const oldOwner = events[0]["eri::events::EriEvents::OwnershipClaimed"].old_owner;
+
+      toast.success(`Ownership claimed successfully from ${hex_it(oldOwner.toString())}`);
+      setClaimCode('');
+      // Refresh items list
+      loadUserItems();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to claim ownership: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -205,10 +249,10 @@ export const UserPage: React.FC = () => {
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
               User Dashboard
             </h1>
-            <p className="text-xl text-slate-300">
+            <p className="text-xl text-gray-300">
               Register, manage your items, and verify product ownership
             </p>
           </div>
@@ -246,7 +290,7 @@ export const UserPage: React.FC = () => {
                     flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 relative
                     ${activeTab === tab.id
                       ? 'text-white' 
-                      : 'text-slate-400 hover:text-purple-400'
+                      : 'text-gray-400 hover:text-green-400'
                     }
                   `}
                 >
@@ -254,7 +298,7 @@ export const UserPage: React.FC = () => {
                   <span>{tab.label}</span>
                   {activeTab === tab.id && (
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl"
+                      className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl"
                       layoutId="activeUserTab"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       style={{ zIndex: -1 }}
@@ -275,11 +319,11 @@ export const UserPage: React.FC = () => {
             >
               <Card className="max-w-2xl mx-auto">
                 <div className="text-center mb-6">
-                  <User className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+                  <User className="w-12 h-12 mx-auto mb-4 text-green-400" />
                   <h2 className="text-2xl font-bold text-white">
                     Register as User
                   </h2>
-                  <p className="text-slate-300 mt-2">
+                  <p className="text-gray-300 mt-2">
                     Create your user account to manage and verify product ownership
                   </p>
                 </div>
@@ -318,67 +362,113 @@ export const UserPage: React.FC = () => {
               transition={{ duration: 0.3 }}
               className="space-y-8"
             >
-              {/* Load Items */}
+              {/* My Items */}
               <Card>
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-bold text-white flex items-center">
-                      <Package className="w-8 h-8 mr-3 text-purple-400" />
-                      My Items
+                      <Package className="w-8 h-8 mr-3 text-green-400" />
+                      My Items ({userItems.length})
                     </h2>
-                    <p className="text-slate-300 mt-2">
-                      View and manage your owned products
+                    <p className="text-gray-300 mt-2">
+                      Your owned products are automatically loaded
                     </p>
                   </div>
                   <Button
                     onClick={loadUserItems}
                     loading={loading}
                     disabled={!isConnected}
+                    variant="outline"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    Load Items
+                    Refresh
                   </Button>
                 </div>
 
-                {userItems.length > 0 && (
+                {userItems.length > 0 ? (
                   <div className="grid gap-4 max-h-96 overflow-y-auto">
                     {userItems.map((item, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="border border-purple-500/20 rounded-xl p-4"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border border-green-500/20 rounded-xl p-4 hover:border-green-500/40 transition-colors"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <h3 className="font-semibold text-white">
+                            <h3 className="font-semibold text-white text-lg">
                               {item.name}
                             </h3>
-                            <div className="space-y-1 text-sm text-slate-300 mt-2">
-                              <p>ID: {item.item_id}</p>
-                              <p>Serial: {item.serial}</p>
-                              <p>Manufacturer: {item.manufacturer}</p>
+                            <div className="space-y-1 text-sm text-gray-300 mt-2">
+                              <p><span className="text-green-400">ID:</span> {item.item_id}</p>
+                              <p><span className="text-green-400">Serial:</span> {item.serial}</p>
+                              <p><span className="text-green-400">Manufacturer:</span> {item.manufacturer}</p>
                             </div>
                           </div>
-                          <div className="text-sm text-slate-300">
-                            <p>Production Date: {item.date}</p>
+                          <div className="text-sm text-gray-300">
+                            <p><span className="text-green-400">Production Date:</span> {item.date}</p>
                             <p className="truncate" title={item.metadata_hash}>
-                              Metadata Hash: {item.metadata_hash}
+                              <span className="text-green-400">Metadata Hash:</span> {item.metadata_hash}
                             </p>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Package className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                    <p className="text-gray-400">No items found. Connect your wallet to load your items.</p>
+                  </div>
                 )}
+              </Card>
+
+              {/* Claim Ownership */}
+              <Card>
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <Package className="w-6 h-6 mr-2 text-green-400" />
+                    Claim Ownership
+                  </h3>
+                  <p className="text-gray-300 mt-2">
+                    Use a transfer code to claim ownership of an item
+                  </p>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    claimOwnershipWithCode();
+                  }}
+                  className="space-y-4"
+                >
+                  <Input
+                    placeholder="Enter transfer code (item hash)"
+                    value={claimCode}
+                    onChange={(e) => setClaimCode(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    loading={loading}
+                    disabled={!isConnected}
+                    className="w-full"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    Claim Ownership
+                  </Button>
+                </form>
               </Card>
 
               {/* Transfer Ownership */}
               <Card>
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-white flex items-center">
-                    <Gift className="w-6 h-6 mr-2 text-purple-400" />
+                    <Gift className="w-6 h-6 mr-2 text-green-400" />
                     Transfer Ownership
                   </h3>
-                  <p className="text-slate-300 mt-2">
+                  <p className="text-gray-300 mt-2">
                     Generate a transfer code to gift your item to another user
                   </p>
                 </div>
@@ -421,7 +511,7 @@ export const UserPage: React.FC = () => {
                     <RotateCcw className="w-6 h-6 mr-2 text-red-400" />
                     Revoke Transfer Code
                   </h3>
-                  <p className="text-slate-300 mt-2">
+                  <p className="text-gray-300 mt-2">
                     Cancel a previously generated transfer code
                   </p>
                 </div>
@@ -443,7 +533,7 @@ export const UserPage: React.FC = () => {
                     type="submit"
                     loading={loading}
                     disabled={!isConnected}
-                    variant="secondary"
+                    variant="danger"
                     className="w-full"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
@@ -464,11 +554,11 @@ export const UserPage: React.FC = () => {
               <div className="grid lg:grid-cols-2 gap-8">
                 <Card>
                   <div className="mb-6">
-                    <Shield className="w-8 h-8 text-purple-400 mb-4" />
+                    <Shield className="w-8 h-8 text-green-400 mb-4" />
                     <h2 className="text-2xl font-bold text-white">
                       Verify Ownership
                     </h2>
-                    <p className="text-slate-300 mt-2">
+                    <p className="text-gray-300 mt-2">
                       Enter an item ID to verify its current ownership details (no wallet required)
                     </p>
                   </div>
@@ -503,32 +593,32 @@ export const UserPage: React.FC = () => {
                       Ownership Details
                     </h3>
                     <div className="space-y-3">
-                      <div className="bg-slate-800/50 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-400">
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-400">
                           Item Name
                         </label>
                         <p className="text-white font-semibold">
                           {ownershipDetails.name}
                         </p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-400">
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-400">
                           Item ID
                         </label>
                         <p className="text-white font-semibold">
                           {ownershipDetails.item_id}
                         </p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-400">
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-400">
                           Owner Username
                         </label>
                         <p className="text-white font-semibold">
                           {ownershipDetails.username}
                         </p>
                       </div>
-                      <div className="bg-slate-800/50 rounded-lg p-4">
-                        <label className="text-sm font-medium text-slate-400">
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-400">
                           Owner Address
                         </label>
                         <p className="text-white font-mono text-sm break-all">
