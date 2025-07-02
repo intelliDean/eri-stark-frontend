@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Navigation } from './components/Navigation';
@@ -13,13 +13,25 @@ import { WalletProvider } from './contexts/WalletContext';
 function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'manufacturer' | 'user' | 'qr-scan'>('landing');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeFeature, setActiveFeature] = useState<string>('');
+
+  // Handle URL parameters for QR code scanning
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get('page');
+    const data = urlParams.get('data');
+    
+    if (page === 'qr-scan' && data) {
+      setCurrentPage('qr-scan');
+    }
+  }, []);
 
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'manufacturer':
-        return <ManufacturerPage />;
+        return <ManufacturerPage activeFeature={activeFeature} />;
       case 'user':
-        return <UserPage />;
+        return <UserPage activeFeature={activeFeature} />;
       case 'qr-scan':
         return <QRScanPage />;
       default:
@@ -58,6 +70,8 @@ function App() {
                 onClose={() => setSidebarOpen(false)}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
+                activeFeature={activeFeature}
+                onFeatureChange={setActiveFeature}
               />
             )}
             

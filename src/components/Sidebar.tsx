@@ -12,7 +12,8 @@ import {
   Eye,
   Gift,
   RotateCcw,
-  X
+  X,
+  Key
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,9 +21,18 @@ interface SidebarProps {
   onClose: () => void;
   currentPage: 'landing' | 'manufacturer' | 'user' | 'qr-scan';
   onPageChange: (page: 'landing' | 'manufacturer' | 'user' | 'qr-scan') => void;
+  activeFeature: string;
+  onFeatureChange: (feature: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, onPageChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  isOpen, 
+  onClose, 
+  currentPage, 
+  onPageChange, 
+  activeFeature, 
+  onFeatureChange 
+}) => {
   const mainNavItems = [
     { id: 'landing', label: 'Home', icon: Home },
     { id: 'manufacturer', label: 'Manufacturer', icon: Building2 },
@@ -40,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, 
     { id: 'register-user', label: 'Register', icon: User },
     { id: 'my-items', label: 'My Items', icon: Package },
     { id: 'transfer-ownership', label: 'Transfer', icon: Gift },
+    { id: 'claim-ownership', label: 'Claim Ownership', icon: Package },
     { id: 'revoke-code', label: 'Revoke Code', icon: RotateCcw },
     { id: 'verify-ownership', label: 'Verify', icon: Shield },
   ];
@@ -53,8 +64,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, 
   const handleNavClick = (id: string) => {
     if (['landing', 'manufacturer', 'user', 'qr-scan'].includes(id)) {
       onPageChange(id as any);
+      onFeatureChange('');
+    } else {
+      onFeatureChange(id);
     }
-    // For feature items, we'll handle them with scroll-to functionality later
     onClose();
   };
 
@@ -127,14 +140,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, 
                   </h3>
                   {manufacturerFeatures.map((item) => {
                     const Icon = item.icon;
+                    const isActive = activeFeature === item.id;
                     
                     return (
                       <button
                         key={item.id}
                         onClick={() => handleNavClick(item.id)}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:text-green-400 hover:bg-green-500/10 transition-all duration-200 group"
+                        className={`
+                          w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group
+                          ${isActive 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'text-gray-300 hover:text-green-400 hover:bg-green-500/10'
+                          }
+                        `}
                       >
-                        <Icon className="w-4 h-4 text-gray-400 group-hover:text-green-400" />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-green-400' : 'text-gray-400 group-hover:text-green-400'}`} />
                         <span className="text-sm">{item.label}</span>
                       </button>
                     );
@@ -150,14 +170,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, 
                   </h3>
                   {userFeatures.map((item) => {
                     const Icon = item.icon;
+                    const isActive = activeFeature === item.id;
                     
                     return (
                       <button
                         key={item.id}
                         onClick={() => handleNavClick(item.id)}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:text-green-400 hover:bg-green-500/10 transition-all duration-200 group"
+                        className={`
+                          w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group
+                          ${isActive 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'text-gray-300 hover:text-green-400 hover:bg-green-500/10'
+                          }
+                        `}
                       >
-                        <Icon className="w-4 h-4 text-gray-400 group-hover:text-green-400" />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-green-400' : 'text-gray-400 group-hover:text-green-400'}`} />
                         <span className="text-sm">{item.label}</span>
                       </button>
                     );
@@ -173,14 +200,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentPage, 
                   </h3>
                   {qrFeatures.map((item) => {
                     const Icon = item.icon;
+                    const isActive = activeFeature === item.id;
                     
                     return (
                       <button
                         key={item.id}
                         onClick={() => handleNavClick(item.id)}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-300 hover:text-green-400 hover:bg-green-500/10 transition-all duration-200 group"
+                        className={`
+                          w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group
+                          ${isActive 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                            : 'text-gray-300 hover:text-green-400 hover:bg-green-500/10'
+                          }
+                        `}
                       >
-                        <Icon className="w-4 h-4 text-gray-400 group-hover:text-green-400" />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-green-400' : 'text-gray-400 group-hover:text-green-400'}`} />
                         <span className="text-sm">{item.label}</span>
                       </button>
                     );

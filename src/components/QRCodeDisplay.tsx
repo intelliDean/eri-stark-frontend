@@ -22,8 +22,8 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
     }
   };
 
-  // Create QR scan URL
-  const qrScanUrl = `${window.location.origin}/#/qr-scan?data=${encodeURIComponent(data)}`;
+  // Create QR scan URL that works with the current routing system
+  const qrScanUrl = `${window.location.origin}?page=qr-scan&data=${encodeURIComponent(data)}`;
 
   return (
     <Card className="text-center">
