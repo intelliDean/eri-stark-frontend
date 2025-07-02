@@ -192,6 +192,79 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPageChange }) => {
         </div>
       </section>
 
+      {/* Team/People Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold mb-4 text-white">
+              Trusted by Industry Leaders
+            </h2>
+            <p className="text-xl text-gray-300">
+              Join thousands of manufacturers and users securing their products with ERI
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                name: "Sarah Chen",
+                role: "Manufacturing Director",
+                company: "TechCorp Industries",
+                image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400",
+                quote: "ERI has revolutionized how we verify our products. The blockchain integration is seamless."
+              },
+              {
+                name: "Marcus Rodriguez",
+                role: "Supply Chain Manager",
+                company: "Global Electronics",
+                image: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400",
+                quote: "Customer trust has increased significantly since implementing ERI's verification system."
+              },
+              {
+                name: "Emily Watson",
+                role: "Quality Assurance Lead",
+                company: "Premium Goods Co.",
+                image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
+                quote: "The QR code system makes product authentication incredibly simple for our customers."
+              }
+            ].map((person, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2 }}
+              >
+                <Card className="text-center">
+                  <img
+                    src={person.image}
+                    alt={person.name}
+                    className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                  />
+                  <h3 className="text-lg font-semibold mb-1 text-white">
+                    {person.name}
+                  </h3>
+                  <p className="text-green-400 text-sm mb-2">
+                    {person.role}
+                  </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    {person.company}
+                  </p>
+                  <p className="text-gray-300 text-sm italic">
+                    "{person.quote}"
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">

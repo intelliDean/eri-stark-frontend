@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle } from 'lucide-react';
+import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle, Wallet } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useWallet } from '../contexts/WalletContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { ItemDetails, OwnershipDetails, ContractType } from '../types';
 import { getContract, OWNERSHIP_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
 
@@ -15,6 +16,7 @@ interface UserPageProps {
 }
 
 export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
+  const { isDark } = useTheme();
   const { provider, account, address, isConnected, connectWallet } = useWallet();
   const [loading, setLoading] = useState(false);
   
@@ -38,6 +40,13 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       loadUserItems();
     }
   }, [activeFeature, isConnected]);
+
+  // Clear items when wallet is disconnected
+  useEffect(() => {
+    if (!isConnected) {
+      setUserItems([]);
+    }
+  }, [isConnected]);
 
   const requireWalletConnection = () => {
     if (!isConnected) {
@@ -235,17 +244,161 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
     }
   };
 
+  // Show wallet connection prompt if not connected
+  if (!isConnected && activeFeature !== 'verify-ownership') {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto"
+          >
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className={`text-4xl font-bold mb-4 bg-gradient-to-r bg-clip-text text-transparent ${
+                isDark 
+                  ? 'from-green-400 to-emerald-400' 
+                  : 'from-green-600 to-emerald-600'
+              }`}>
+                User Dashboard
+              </h1>
+              <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                Connect your wallet to access your product ownership dashboard
+              </p>
+            </div>
+
+            {/* Wallet Connection Card */}
+            <Card className="text-center mb-12">
+              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center ${
+                isDark 
+                  ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                  : 'bg-gradient-to-br from-green-600 to-emerald-700'
+              }`}>
+                <Wallet className="w-8 h-8 text-white" />
+              </div>
+              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                Connect Your Wallet
+              </h2>
+              <p className={`text-lg mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                To access your dashboard and manage your product ownership, please connect your wallet.
+              </p>
+              <Button onClick={connectWallet} size="lg">
+                <Wallet className="w-5 h-5 mr-2" />
+                Connect Wallet
+              </Button>
+            </Card>
+
+            {/* How It Works for Users */}
+            <Card>
+              <h3 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                How It Works for Users
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      1
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Register Your Account
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Create your user account on the blockchain to start managing products
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      2
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Claim Product Ownership
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Scan QR codes or use transfer codes to claim ownership of authentic products
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      3
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Manage Your Items
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        View all your owned products and transfer them to others securely
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      4
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Verify Authenticity
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Use the sidebar features to verify product authenticity and ownership
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`mt-8 p-4 rounded-xl border ${
+                isDark 
+                  ? 'bg-blue-500/10 border-blue-500/30' 
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <p className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                  💡 <strong>Tip:</strong> Once connected, use the sidebar to access all user features including registration, item management, and verification tools.
+                </p>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   const renderContent = () => {
     switch (activeFeature) {
       case 'register-user':
         return (
           <Card className="max-w-2xl mx-auto">
             <div className="text-center mb-6">
-              <User className="w-12 h-12 mx-auto mb-4 text-green-400" />
-              <h2 className="text-2xl font-bold text-white">
+              <User className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 Register as User
               </h2>
-              <p className="text-gray-300 mt-2">
+              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Create your user account to manage and verify product ownership
               </p>
             </div>
@@ -279,11 +432,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         return (
           <Card className="max-w-2xl mx-auto">
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center">
-                <Package className="w-6 h-6 mr-2 text-green-400" />
+              <h3 className={`text-xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <Package className={`w-6 h-6 mr-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                 Claim Ownership
               </h3>
-              <p className="text-gray-300 mt-2">
+              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Use a transfer code to claim ownership of an item
               </p>
             </div>
@@ -318,11 +471,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         return (
           <Card className="max-w-2xl mx-auto">
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center">
-                <Gift className="w-6 h-6 mr-2 text-green-400" />
+              <h3 className={`text-xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <Gift className={`w-6 h-6 mr-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                 Transfer Ownership
               </h3>
-              <p className="text-gray-300 mt-2">
+              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Generate a transfer code to gift your item to another user
               </p>
             </div>
@@ -363,11 +516,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         return (
           <Card className="max-w-2xl mx-auto">
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center">
-                <RotateCcw className="w-6 h-6 mr-2 text-red-400" />
+              <h3 className={`text-xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <RotateCcw className={`w-6 h-6 mr-2 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
                 Revoke Transfer Code
               </h3>
-              <p className="text-gray-300 mt-2">
+              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Cancel a previously generated transfer code
               </p>
             </div>
@@ -404,11 +557,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
           <div className="grid lg:grid-cols-2 gap-8">
             <Card>
               <div className="mb-6">
-                <Shield className="w-8 h-8 text-green-400 mb-4" />
-                <h2 className="text-2xl font-bold text-white">
+                <Shield className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Verify Ownership
                 </h2>
-                <p className="text-gray-300 mt-2">
+                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Enter an item ID to verify its current ownership details (no wallet required)
                 </p>
               </div>
@@ -439,39 +592,39 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
             {ownershipDetails && (
               <Card>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Ownership Details
                 </h3>
                 <div className="space-y-3">
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <label className="text-sm font-medium text-gray-400">
+                  <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+                    <label className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Item Name
                     </label>
-                    <p className="text-white font-semibold">
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       {ownershipDetails.name}
                     </p>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <label className="text-sm font-medium text-gray-400">
+                  <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+                    <label className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Item ID
                     </label>
-                    <p className="text-white font-semibold">
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       {ownershipDetails.item_id}
                     </p>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <label className="text-sm font-medium text-gray-400">
+                  <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+                    <label className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Owner Username
                     </label>
-                    <p className="text-white font-semibold">
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       {ownershipDetails.username}
                     </p>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <label className="text-sm font-medium text-gray-400">
+                  <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+                    <label className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Owner Address
                     </label>
-                    <p className="text-white font-mono text-sm break-all">
+                    <p className={`font-mono text-sm break-all ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       {ownershipDetails.owner}
                     </p>
                   </div>
@@ -487,11 +640,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
           <Card>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-white flex items-center">
-                  <Package className="w-8 h-8 mr-3 text-green-400" />
+                <h2 className={`text-2xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <Package className={`w-8 h-8 mr-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   My Items ({userItems.length})
                 </h2>
-                <p className="text-gray-300 mt-2">
+                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Your owned products are automatically loaded
                 </p>
               </div>
@@ -508,10 +661,14 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
             {!isConnected && (
               <div className="mb-6">
-                <Card className="bg-amber-500/10 border-amber-500/30">
+                <Card className={`border ${
+                  isDark 
+                    ? 'bg-amber-500/10 border-amber-500/30' 
+                    : 'bg-amber-50 border-amber-200'
+                }`}>
                   <div className="flex items-center space-x-3">
-                    <AlertCircle className="w-5 h-5 text-amber-400" />
-                    <p className="text-amber-300">
+                    <AlertCircle className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                    <p className={isDark ? 'text-amber-300' : 'text-amber-700'}>
                       Connect your wallet to view and manage your items
                     </p>
                     <Button onClick={connectWallet} size="sm" variant="outline">
@@ -530,23 +687,27 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="border border-green-500/20 rounded-xl p-4 hover:border-green-500/40 transition-colors"
+                    className={`border rounded-xl p-4 transition-colors ${
+                      isDark 
+                        ? 'border-green-500/20 hover:border-green-500/40' 
+                        : 'border-green-600/20 hover:border-green-600/40'
+                    }`}
                   >
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <h3 className="font-semibold text-white text-lg">
+                        <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
                           {item.name}
                         </h3>
-                        <div className="space-y-1 text-sm text-gray-300 mt-2">
-                          <p><span className="text-green-400">ID:</span> {item.item_id}</p>
-                          <p><span className="text-green-400">Serial:</span> {item.serial}</p>
-                          <p><span className="text-green-400">Manufacturer:</span> {item.manufacturer}</p>
+                        <div className={`space-y-1 text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>ID:</span> {item.item_id}</p>
+                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Serial:</span> {item.serial}</p>
+                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Manufacturer:</span> {item.manufacturer}</p>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-300">
-                        <p><span className="text-green-400">Production Date:</span> {item.date}</p>
+                      <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Production Date:</span> {item.date}</p>
                         <p className="truncate" title={item.metadata_hash}>
-                          <span className="text-green-400">Metadata Hash:</span> {item.metadata_hash}
+                          <span className={isDark ? 'text-green-400' : 'text-green-600'}>Metadata Hash:</span> {item.metadata_hash}
                         </p>
                       </div>
                     </div>
@@ -555,8 +716,10 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <Package className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">No items found. Connect your wallet to load your items.</p>
+                <Package className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                  {isConnected ? 'No items found.' : 'Connect your wallet to load your items.'}
+                </p>
               </div>
             )}
           </Card>

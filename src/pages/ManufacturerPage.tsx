@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Upload, FileText, Shield, Download, AlertCircle } from 'lucide-react';
+import { Building2, Upload, FileText, Shield, Download, AlertCircle, Lightbulb } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 import { typedData } from 'starknet';
@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { QRCodeDisplay } from '../components/QRCodeDisplay';
 import { useWallet } from '../contexts/WalletContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Certificate, CertificateResult, ContractType } from '../types';
 import { getContract, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString } from '../utils/blockchain';
 import { getTypedData } from '../utils/certificateData';
@@ -19,6 +20,7 @@ interface ManufacturerPageProps {
 }
 
 export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeature }) => {
+  const { isDark } = useTheme();
   const { provider, account, address, isConnected, connectWallet } = useWallet();
   const [loading, setLoading] = useState(false);
   
@@ -281,11 +283,11 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
         return (
           <Card className="max-w-2xl mx-auto">
             <div className="text-center mb-6">
-              <Building2 className="w-12 h-12 mx-auto mb-4 text-green-400" />
-              <h2 className="text-2xl font-bold text-white">
+              <Building2 className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 Register as Manufacturer
               </h2>
-              <p className="text-gray-300 mt-2">
+              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Register your company on the blockchain to start creating verified certificates
               </p>
             </div>
@@ -320,11 +322,11 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
           <div className="grid lg:grid-cols-2 gap-8">
             <Card>
               <div className="mb-6">
-                <FileText className="w-8 h-8 text-green-400 mb-4" />
-                <h2 className="text-2xl font-bold text-white">
+                <FileText className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Create Certificate
                 </h2>
-                <p className="text-gray-300 mt-2">
+                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Create and verify a single product certificate
                 </p>
               </div>
@@ -386,11 +388,11 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
           <>
             <Card className="mb-8">
               <div className="mb-6">
-                <Upload className="w-8 h-8 text-green-400 mb-4" />
-                <h2 className="text-2xl font-bold text-white">
+                <Upload className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Bulk Certificate Upload
                 </h2>
-                <p className="text-gray-300 mt-2">
+                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Upload a CSV file with multiple certificates to process in batch
                 </p>
               </div>
@@ -403,7 +405,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
                 className="space-y-6"
               >
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     Upload CSV File
                   </label>
                   <Input
@@ -412,14 +414,18 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
                     onChange={handleFileUpload}
                     className="cursor-pointer"
                   />
-                  <p className="text-sm text-gray-400 mt-2">
+                  <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     CSV should contain columns: name, unique_id, serial, metadata
                   </p>
                 </div>
 
                 {certificates.length > 0 && (
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-                    <p className="text-green-300 font-medium">
+                  <div className={`p-4 rounded-xl border ${
+                    isDark 
+                      ? 'bg-green-500/10 border-green-500/30' 
+                      : 'bg-green-50 border-green-200'
+                  }`}>
+                    <p className={`font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
                       {certificates.length} certificates loaded and ready for processing
                     </p>
                   </div>
@@ -441,7 +447,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
             {certificateResults.length > 0 && (
               <Card>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                     Processing Results
                   </h3>
                   <Button
@@ -458,17 +464,25 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
                   {certificateResults.map((result, index) => (
                     <div
                       key={result.certificate.id || index}
-                      className="border border-green-500/20 rounded-xl p-4"
+                      className={`border rounded-xl p-4 ${
+                        isDark 
+                          ? 'border-green-500/20' 
+                          : 'border-green-600/20'
+                      }`}
                     >
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                          <h4 className="font-semibold text-white mb-2">
+                          <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                             {result.certificate.name}
                           </h4>
-                          <div className="space-y-1 text-sm text-gray-300">
+                          <div className={`space-y-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                             <p>ID: {result.certificate.id}</p>
                             <p>Serial: {result.certificate.serial}</p>
-                            <p className={`font-medium ${result.verificationResult ? 'text-green-400' : 'text-red-400'}`}>
+                            <p className={`font-medium ${
+                              result.verificationResult 
+                                ? isDark ? 'text-green-400' : 'text-green-600'
+                                : isDark ? 'text-red-400' : 'text-red-600'
+                            }`}>
                               Status: {result.verificationResult ? 'Verified' : 'Failed'}
                               {result.error && ` - ${result.error}`}
                             </p>
@@ -495,25 +509,138 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({ activeFeatur
 
       default:
         return (
-          <div className="text-center py-16">
-            <Building2 className="w-16 h-16 mx-auto mb-6 text-green-400" />
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Manufacturer Dashboard
-            </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Select a feature from the sidebar to get started
-            </p>
-            {!isConnected && (
-              <div className="max-w-md mx-auto">
-                <Card className="bg-amber-500/10 border-amber-500/30">
-                  <div className="flex items-center space-x-3">
-                    <AlertCircle className="w-5 h-5 text-amber-400" />
-                    <p className="text-amber-300">
-                      Connect your wallet to access manufacturer features
-                    </p>
+          <div className="space-y-8">
+            {/* Header */}
+            <div className="text-center">
+              <Building2 className={`w-16 h-16 mx-auto mb-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+              <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                Manufacturer Dashboard
+              </h2>
+              <p className={`text-xl mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                Create and manage product certificates with blockchain verification
+              </p>
+            </div>
+
+            {/* How It Works */}
+            <Card>
+              <h3 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                How It Works for Manufacturers
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      1
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Register Your Company
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Register as a verified manufacturer on the Starknet blockchain
+                      </p>
+                    </div>
                   </div>
-                </Card>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      2
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Create Certificates
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Generate cryptographically signed certificates for your products
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      3
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Generate QR Codes
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Create tamper-proof QR codes for each verified certificate
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                      isDark 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                        : 'bg-gradient-to-br from-green-600 to-emerald-700'
+                    }`}>
+                      4
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        Attach to Products
+                      </h4>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Apply QR codes to products for instant authenticity verification
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </Card>
+
+            {/* Navigation Instructions */}
+            <Card className={`border ${
+              isDark 
+                ? 'bg-blue-500/10 border-blue-500/30' 
+                : 'bg-blue-50 border-blue-200'
+            }`}>
+              <div className="flex items-start space-x-3">
+                <Lightbulb className={`w-6 h-6 mt-1 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                <div>
+                  <h4 className={`font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                    Getting Started
+                  </h4>
+                  <p className={`text-sm ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
+                    Use the sidebar to access manufacturer features. Start by registering your company, then create individual certificates or upload multiple certificates via CSV for bulk processing.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Wallet Connection Warning */}
+            {!isConnected && (
+              <Card className={`border ${
+                isDark 
+                  ? 'bg-amber-500/10 border-amber-500/30' 
+                  : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                  <p className={isDark ? 'text-amber-300' : 'text-amber-700'}>
+                    Connect your wallet to access manufacturer features
+                  </p>
+                  <Button onClick={connectWallet} size="sm" variant="outline">
+                    Connect Wallet
+                  </Button>
+                </div>
+              </Card>
             )}
           </div>
         );

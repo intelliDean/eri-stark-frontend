@@ -22,11 +22,33 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const isConnected = !!address;
 
-  // Remove auto-connect on load - let users explore first
+  // Initialize with default provider for read-only operations
   useEffect(() => {
-    // Initialize with default provider for read-only operations
     setProvider(PROVIDER);
   }, []);
+
+  // Listen for account changes in wallet
+  useEffect(() => {
+    const handleAccountChange = (accounts: string[]) => {
+      if (accounts.length > 0 && accounts[0] !== address) {
+        // Account changed, update the address
+        setAddress(accounts[0] as ContractAddress);
+        toast.info(`Switched to account: ${accounts[0].slice(0, 10)}...`);
+      } else if (accounts.length === 0 && address) {
+        // No accounts available, disconnect
+        disconnectWallet();
+      }
+    };
+
+    // Listen for wallet events if available
+    if (typeof window !== 'undefined' && window.starknet) {
+      window.starknet.on('accountsChanged', handleAccountChange);
+      
+      return () => {
+        window.starknet.off('accountsChanged', handleAccountChange);
+      };
+    }
+  }, [address]);
 
   const connectWallet = async (): Promise<void> => {
     try {
