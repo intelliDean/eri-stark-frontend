@@ -59,12 +59,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPageChange }) => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Powered by Starknet Blockchain
+              Powered by Starknet
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-green-400 via-emerald-400 to-green-600 bg-clip-text text-transparent">
-                Verify. Authenticate. Own.
+                Verify. Protect. Own.
               </span>
             </h1>
 
