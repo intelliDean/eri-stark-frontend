@@ -37,15 +37,15 @@ export const parseError = (error: unknown): string => {
         "product is not authentic": "Product authenticity verification failed - this may be a counterfeit item",
         
         // Ownership & Transfer Errors
-        "item already owned": "This item is already claimed by another user",
+        "item already owned": "This item is onwed by another user",
         "item already claimed": "This item has already been claimed",
-        "only owner is allowed": "Only the current owner can perform this action",
+        "only owner is allowed": "Only the owner can perform this action",
         "unauthorized caller": "You are not authorized to perform this action",
         "unauthorized claimant": "You are not authorized to claim this item",
         "invalid item id": "Item doesn't exist or invalid item ID",
         "item not found": "The specified item could not be found",
         "cannot generate for yourself": "Cannot generate transfer code for yourself",
-        "item not claimed yet": "This item has not been claimed yet",
+        "item not claimed yet": "Cannot generate a new transfer code as item has not been claimed yet",
         "invalid item hash": "Invalid item hash - transfer code may be corrupted",
         "item claim failed": "Failed to claim item ownership",
         "transfer code expired": "Transfer code has expired",
