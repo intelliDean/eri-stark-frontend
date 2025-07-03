@@ -18,6 +18,7 @@ export const getContract = async (
     address?: ContractAddress | null
 ): Promise<Contract> => {
     try {
+
         const {abi} = await provider.getClassAt(contractAddress);
         if (!abi) {
             throw new Error("No ABI found for the contract.");
@@ -25,6 +26,7 @@ export const getContract = async (
 
         if (contractType === ContractType.VIEW) {
             return new Contract(abi, contractAddress, provider);
+
         } else if (contractType === ContractType.STATE_CHANGE) {
             if (!address || !account) {
                 throw new Error("Account not initialized");
