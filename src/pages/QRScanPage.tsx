@@ -165,7 +165,7 @@ export const QRScanPage: React.FC = () => {
         toast.success('Product authenticity verified');
         
         let manufacturer = await contract.get_manufacturer(parsedData.cert.owner);
-        console.log(`Manufacturer: ${manufacturer}`);
+        console.log(`Manufacturer: ${manufacturer.manufacturer_name}`);
         
       } else {
         toast.error('Product authenticity verification failed');
