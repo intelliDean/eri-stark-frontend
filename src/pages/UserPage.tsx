@@ -69,8 +69,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
     setLoading(true);
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
+
+      console.log("Contract: ", contract);
       
       const res = await contract.user_registers(stringToFelt252(username.toLowerCase().trim()));
+      conaole.log("It regs successfully");
       const txHash = res?.transaction_hash;
       const txResult = await provider!.waitForTransaction(txHash);
       const events = contract.parseEvents(txResult);
