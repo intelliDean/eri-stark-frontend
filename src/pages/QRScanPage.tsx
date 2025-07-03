@@ -151,7 +151,7 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.VIEW, provider!, account, address);
       
-      const result = await contract.verify_signature(parsedData.cert, parsedData.msgHash);
+      const result = await contract.verify_authenticity(parsedData.cert, parsedData.msgHash);
       
       setVerificationResult({
         type: 'authenticity',
