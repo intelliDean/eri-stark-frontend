@@ -163,10 +163,8 @@ export const QRScanPage: React.FC = () => {
       
       if (result) {
         toast.success('Product authenticity verified');
-
         
         let manufacturer = await contract.get_manufacturer(parsedData.cert.owner);
-
         console.log(`Manufacturer: ${manufacturer}`);
         
       } else {
