@@ -22,6 +22,7 @@ export const QRScanPage: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState<'claim' | 'verify-ownership' | 'verify-authenticity' | null>(null);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [manufacturerName, setManufacturerName] = useState('');
 
   // Parse QR data on component mount if URL contains data
   useEffect(() => {
@@ -162,6 +163,12 @@ export const QRScanPage: React.FC = () => {
       
       if (result) {
         toast.success('Product authenticity verified');
+
+        
+        let manufacturer = await contract.get_manufacturer(parsedData.cert.owner);
+
+        console.log(`Manufacturer: ${manufacturer}`);
+        
       } else {
         toast.error('Product authenticity verification failed');
       }
