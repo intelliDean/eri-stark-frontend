@@ -116,9 +116,12 @@ export const QRScanPage: React.FC = () => {
 
       console.log("Contract: ", contract);
 
-       console.log("Item ID: ", stringToFelt252(parsedData.cert.id));
+       console.log("Item ID: ", parsedData.cert.id);
       
       const result = await contract.verify_ownership(stringToFelt252(parsedData.cert.id));
+
+      console.log("Result: ", result);
+      
       
       const ownershipDetails = {
         name: felt252ToString(result.name),
