@@ -10,6 +10,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { ItemDetails, OwnershipDetails, ContractType } from '../types';
 import { getContract, OWNERSHIP_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
+import { handleError } from '../utils/errorParser';
 
 interface UserPageProps {
   activeFeature: string;
@@ -80,8 +81,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       toast.success(`User ${felt252ToString(userName.toString())} registered successfully!`);
       setUsername('');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Registration failed: ${message}`);
+      handleError(error, 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -111,8 +111,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         toast.success(`Loaded ${items.length} items`);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to load items: ${message}`);
+      handleError(error, 'Failed to load items');
     } finally {
       setLoading(false);
     }
@@ -146,8 +145,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       setTransferItemId('');
       setTransferToAddress('');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to generate transfer code: ${message}`);
+      handleError(error, 'Failed to generate transfer code');
     } finally {
       setLoading(false);
     }
@@ -180,8 +178,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       // Refresh items list
       loadUserItems();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to claim ownership: ${message}`);
+      handleError(error, 'Failed to claim ownership');
     } finally {
       setLoading(false);
     }
@@ -208,8 +205,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       toast.success('Transfer code revoked successfully');
       setRevokeItemHash('');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to revoke code: ${message}`);
+      handleError(error, 'Failed to revoke code');
     } finally {
       setLoading(false);
     }
@@ -237,8 +233,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       setOwnershipDetails(details);
       toast.success('Ownership details retrieved');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Verification failed: ${message}`);
+      handleError(error, 'Verification failed');
     } finally {
       setLoading(false);
     }

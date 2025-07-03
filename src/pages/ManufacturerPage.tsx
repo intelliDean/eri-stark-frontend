@@ -14,6 +14,7 @@ import {useTheme} from '../contexts/ThemeContext';
 import {Certificate, CertificateResult, ContractType} from '../types';
 import {getContract, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString} from '../utils/blockchain';
 import {getTypedData} from '../utils/certificateData';
+import {parseError, handleError} from '../utils/errorParser';
 
 interface ManufacturerPageProps {
     activeFeature: string;
@@ -78,8 +79,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             toast.success(`Manufacturer ${felt252ToString(manuName.toString())} registered successfully!`);
             setManufacturerName('');
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Unknown error";
-            toast.error(`Registration failed: ${message}`);
+            handleError(error, 'Registration failed');
         } finally {
             setLoading(false);
         }
@@ -129,8 +129,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             });
             setVerifySignature('');
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Unknown error";
-            toast.error(`Verification failed: ${message}`);
+            handleError(error, 'Verification failed');
             setAuthResult('Verification Failed');
         } finally {
             setLoading(false);
@@ -188,8 +187,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                 metadata: ''
             });
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Unknown error";
-            toast.error(`Verification failed: ${message}`);
+            handleError(error, 'Verification failed');
         } finally {
             setLoading(false);
         }
@@ -260,7 +258,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                 );
             },
             error: (error) => {
-                toast.error(`CSV parsing error: ${error.message}`);
+                handleError(error, 'CSV parsing error');
             },
         });
     };
@@ -306,7 +304,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                         msgHash: '',
                         qrData: '',
                         verificationResult: false,
-                        error: error instanceof Error ? error.message : 'Unknown error',
+                        error: parseError(error),
                     });
                 }
             }
@@ -314,8 +312,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             setCertificateResults(results);
             toast.success(`Processed ${results.length} certificates`);
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Unknown error";
-            toast.error(`Processing failed: ${message}`);
+            handleError(error, 'Processing failed');
         } finally {
             setLoading(false);
         }

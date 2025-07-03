@@ -11,6 +11,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Certificate, ContractType } from '../types';
 import { getContract, OWNERSHIP_ADDRESS, AUTHENTICITY_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
+import { handleError } from '../utils/errorParser';
 
 export const QRScanPage: React.FC = () => {
   const { isDark } = useTheme();
@@ -91,12 +92,11 @@ export const QRScanPage: React.FC = () => {
         data: cert
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to claim ownership: ${message}`);
+      handleError(error, 'Failed to claim ownership');
       setVerificationResult({
         type: 'claim',
         success: false,
-        message: `Failed to claim ownership: ${message}`
+        message: 'Failed to claim ownership'
       });
     } finally {
       setLoading(false);
@@ -130,12 +130,11 @@ export const QRScanPage: React.FC = () => {
       });
       toast.success('Ownership verified successfully');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Ownership verification failed: ${message}`);
+      handleError(error, 'Ownership verification failed');
       setVerificationResult({
         type: 'ownership',
         success: false,
-        message: `Ownership verification failed: ${message}`
+        message: 'Ownership verification failed'
       });
     } finally {
       setLoading(false);
@@ -167,12 +166,11 @@ export const QRScanPage: React.FC = () => {
         toast.error('Product authenticity verification failed');
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Authenticity verification failed: ${message}`);
+      handleError(error, 'Authenticity verification failed');
       setVerificationResult({
         type: 'authenticity',
         success: false,
-        message: `Authenticity verification failed: ${message}`
+        message: 'Authenticity verification failed'
       });
     } finally {
       setLoading(false);
