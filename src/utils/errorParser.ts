@@ -37,6 +37,7 @@ export const parseError = (error: unknown): string => {
         "product is not authentic": "Product authenticity verification failed - this may be a counterfeit item",
         
         // Ownership & Transfer Errors
+        "does_not_exist": "Item does not exist yet",
         "item already owned": "This item is onwed by another user",
         "item already claimed": "This item has already been claimed",
         "only owner is allowed": "Only the owner can perform this action",
