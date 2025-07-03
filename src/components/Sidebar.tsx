@@ -43,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const manufacturerFeatures = [
     { id: 'register-manufacturer', label: 'Register', icon: Building2 },
     { id: 'create-certificate', label: 'Create Certificate', icon: FileText },
+    { id: 'verify-authenticity', label: 'Verify Authenticity', icon: Eye },
     { id: 'bulk-upload', label: 'Bulk Upload', icon: Upload },
   ];
 

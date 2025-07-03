@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {motion} from 'framer-motion';
-import {Building2, Upload, FileText, Shield, Download, AlertCircle, Lightbulb} from 'lucide-react';
+import {Building2, Upload, FileText, Shield, Download, AlertCircle, Lightbulb, Eye} from 'lucide-react';
 import {toast} from 'react-toastify';
 import Papa from 'papaparse';
 import {typedData} from 'starknet';
@@ -26,8 +26,6 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
 
     // Registration state
     const [manufacturerName, setManufacturerName] = useState('');
-    const [sigature, setSignature] = useState('');
-    const [authResult, setAuthResult] = useState('');
 
     // Single certificate state
     const [certificate, setCertificate] = useState({
@@ -39,6 +37,10 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
         metadata: ''
     });
     const [singleQRData, setSingleQRData] = useState('');
+
+    // Product authenticity verification state
+    const [verifySignature, setVerifySignature] = useState('');
+    const [authResult, setAuthResult] = useState('');
 
     // Bulk certificates state
     const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -83,12 +85,11 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
         }
     };
 
-
     const verifyProductAuthenticity = async () => {
         if (!requireWalletConnection()) return;
 
-        if (!certificate.name || !certificate.unique_id || !certificate.serial || !certificate.date || !certificate.owner || !certificate.metadata) {
-            toast.error('Please fill in all required fields');
+        if (!certificate.name || !certificate.unique_id || !certificate.serial || !certificate.date || !certificate.owner || !certificate.metadata || !verifySignature) {
+            toast.error('Please fill in all required fields including the signature');
             return;
         }
 
@@ -108,15 +109,14 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                     .filter(Boolean),
             };
 
-            const result = await contract.verify_authenticity(cert, sigature);
+            const result = await contract.verify_authenticity(cert, verifySignature);
 
             if (!result) {
-                throw new Error('Product Authenticity failed!');
+                throw new Error('Product authenticity verification failed!');
             }
 
-            setAuthResult(result);
-
-            toast.success(`${cert.name} authenticity is: ${result}`);
+            setAuthResult(result ? 'Authentic' : 'Not Authentic');
+            toast.success(`${cert.name} authenticity is: ${result ? 'Authentic' : 'Not Authentic'}`);
 
             // Reset form
             setCertificate({
@@ -127,9 +127,11 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                 owner: '',
                 metadata: ''
             });
+            setVerifySignature('');
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Unknown error";
             toast.error(`Verification failed: ${message}`);
+            setAuthResult('Verification Failed');
         } finally {
             setLoading(false);
         }
@@ -174,7 +176,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             });
 
             setSingleQRData(qrData);
-            toast.success('Certificate verified and QR code generated!');
+            toast.success('Certificate signed and verified successfully! QR code generated.');
 
             // Reset form
             setCertificate({
@@ -386,7 +388,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                     Create Certificate
                                 </h2>
                                 <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                    Create and verify a single product certificate
+                                    Create and verify a single product certificate (Manufacturer only)
                                 </p>
                             </div>
 
@@ -427,7 +429,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                     className="w-full"
                                 >
                                     <Shield className="w-4 h-4 mr-2"/>
-                                    {!isConnected ? 'Connect Wallet to Create' : 'Create & Verify Certificate'}
+                                    {!isConnected ? 'Connect Wallet to Create' : 'Sign & Verify Certificate'}
                                 </Button>
                             </form>
                         </Card>
@@ -438,6 +440,121 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                 label="Certificate QR Code"
                                 itemId={certificate.unique_id}
                             />
+                        )}
+                    </div>
+                );
+
+            case 'verify-authenticity':
+                return (
+                    <div className="grid lg:grid-cols-2 gap-8">
+                        <Card>
+                            <div className="mb-6">
+                                <Eye className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`}/>
+                                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                    Verify Product Authenticity
+                                </h2>
+                                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    Verify the authenticity of a product using certificate data and signature
+                                </p>
+                            </div>
+
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    verifyProductAuthenticity();
+                                }}
+                                className="space-y-4"
+                            >
+                                <Input
+                                    placeholder="Product Name"
+                                    value={certificate.name}
+                                    onChange={(e) => setCertificate({...certificate, name: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Unique Product ID"
+                                    value={certificate.unique_id}
+                                    onChange={(e) => setCertificate({...certificate, unique_id: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Serial Number"
+                                    value={certificate.serial}
+                                    onChange={(e) => setCertificate({...certificate, serial: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Production Date (timestamp)"
+                                    value={certificate.date}
+                                    onChange={(e) => setCertificate({...certificate, date: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Owner Address"
+                                    value={certificate.owner}
+                                    onChange={(e) => setCertificate({...certificate, owner: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Metadata (comma separated)"
+                                    value={certificate.metadata}
+                                    onChange={(e) => setCertificate({...certificate, metadata: e.target.value})}
+                                    required
+                                />
+                                <Input
+                                    placeholder="Signature Hash"
+                                    value={verifySignature}
+                                    onChange={(e) => setVerifySignature(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="submit"
+                                    loading={loading}
+                                    disabled={!isConnected}
+                                    className="w-full"
+                                >
+                                    <Eye className="w-4 h-4 mr-2"/>
+                                    {!isConnected ? 'Connect Wallet to Verify' : 'Verify Authenticity'}
+                                </Button>
+                            </form>
+                        </Card>
+
+                        {authResult && (
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                        Authenticity Result
+                                    </h3>
+                                    <div className={`p-6 rounded-xl border-2 ${
+                                        authResult === 'Authentic'
+                                            ? isDark
+                                                ? 'border-green-500 bg-green-500/10 text-green-400'
+                                                : 'border-green-600 bg-green-50 text-green-700'
+                                            : isDark
+                                                ? 'border-red-500 bg-red-500/10 text-red-400'
+                                                : 'border-red-600 bg-red-50 text-red-700'
+                                    }`}>
+                                        <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                                            authResult === 'Authentic'
+                                                ? 'bg-green-500'
+                                                : 'bg-red-500'
+                                        }`}>
+                                            {authResult === 'Authentic' ? (
+                                                <Shield className="w-8 h-8 text-white" />
+                                            ) : (
+                                                <AlertCircle className="w-8 h-8 text-white" />
+                                            )}
+                                        </div>
+                                        <p className="text-2xl font-bold">{authResult}</p>
+                                        <p className="text-sm mt-2 opacity-80">
+                                            {authResult === 'Authentic' 
+                                                ? 'This product has been verified as authentic'
+                                                : 'This product could not be verified as authentic'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            </Card>
                         )}
                     </div>
                 );
@@ -686,7 +803,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                     <p className={`text-sm ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
                                         Use the sidebar to access manufacturer features. Start by registering your
                                         company, then create individual certificates or upload multiple certificates via
-                                        CSV for bulk processing.
+                                        CSV for bulk processing. You can also verify product authenticity using existing certificate data.
                                     </p>
                                 </div>
                             </div>
