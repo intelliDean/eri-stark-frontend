@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle, Wallet } from 'lucide-react';
+import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle, Wallet, Copy } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -152,8 +152,8 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const item = userItems.find(item => item.item_id === transferItemId);
       const itemName = item?.name || transferItemId;
 
-      // Send notification to recipient
-      sendOwnershipTransferNotification(
+      // Send notification to recipient via Supabase
+      await sendOwnershipTransferNotification(
         transferToAddress,
         transferItemId,
         itemName,
@@ -257,6 +257,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
   };
 
   // Show wallet connection prompt if not connected
@@ -675,9 +680,22 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                     <label className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       Owner Address
                     </label>
-                    <p className={`font-mono text-sm break-all ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                      {ownershipDetails.owner}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <p className={`font-mono text-sm break-all flex-1 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        {ownershipDetails.owner}
+                      </p>
+                      <button
+                        onClick={() => copyToClipboard(ownershipDetails.owner)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          isDark 
+                            ? 'text-gray-400 hover:text-green-400 hover:bg-green-500/10' 
+                            : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
+                        }`}
+                        title="Copy address"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </Card>

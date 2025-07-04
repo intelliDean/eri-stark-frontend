@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, Check, CheckCheck, Trash2, Gift, Clock, ExternalLink } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, Trash2, Gift, Clock, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -16,10 +16,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
   const { 
     notifications, 
     unreadCount, 
+    loading,
     markAsRead, 
     markAllAsRead, 
     removeNotification, 
-    clearAllNotifications 
+    clearAllNotifications,
+    refreshNotifications
   } = useNotifications();
 
   const handleNotificationClick = (notification: any) => {
@@ -96,16 +98,30 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                   <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                     Notifications
                   </h2>
-                  <button
-                    onClick={onClose}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isDark 
-                        ? 'text-gray-400 hover:text-green-400 hover:bg-green-500/10' 
-                        : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
-                    }`}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={refreshNotifications}
+                      disabled={loading}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark 
+                          ? 'text-gray-400 hover:text-green-400 hover:bg-green-500/10' 
+                          : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
+                      } ${loading ? 'animate-spin' : ''}`}
+                      title="Refresh notifications"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark 
+                          ? 'text-gray-400 hover:text-green-400 hover:bg-green-500/10' 
+                          : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
+                      }`}
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -117,6 +133,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                         variant="outline"
                         size="sm"
                         className="flex-1"
+                        disabled={loading}
                       >
                         <CheckCheck className="w-4 h-4 mr-2" />
                         Mark All Read
@@ -127,6 +144,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                       variant="ghost"
                       size="sm"
                       className="flex-1"
+                      disabled={loading}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Clear All
@@ -137,7 +155,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
 
               {/* Notifications List */}
               <div className="flex-1 overflow-y-auto">
-                {notifications.length === 0 ? (
+                {loading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <RefreshCw className={`w-8 h-8 animate-spin ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                  </div>
+                ) : notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full p-8">
                     <Bell className={`w-16 h-16 mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                     <p className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -203,6 +225,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                                   isDark ? 'text-green-400' : 'text-green-600'
                                 }`}>
                                   Item: {notification.data.itemName}
+                                </p>
+                              )}
+
+                              {notification.data?.transferCode && (
+                                <p className={`text-xs mt-1 font-mono ${
+                                  isDark ? 'text-gray-400' : 'text-gray-500'
+                                }`}>
+                                  Code: {notification.data.transferCode.slice(0, 10)}...
                                 </p>
                               )}
 
