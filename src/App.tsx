@@ -9,6 +9,7 @@ import { UserPage } from './pages/UserPage';
 import { QRScanPage } from './pages/QRScanPage';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { WalletProvider } from './contexts/WalletContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 function AppContent() {
   const { isDark } = useTheme();
@@ -25,6 +26,22 @@ function AppContent() {
     if (page === 'qr-scan' && data) {
       setCurrentPage('qr-scan');
     }
+  }, []);
+
+  // Listen for navigation events from notifications
+  useEffect(() => {
+    const handleNavigateToFeature = (event: CustomEvent) => {
+      const { page, feature } = event.detail;
+      setCurrentPage(page);
+      setActiveFeature(feature);
+      setSidebarOpen(true);
+    };
+
+    window.addEventListener('navigate-to-feature', handleNavigateToFeature as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigate-to-feature', handleNavigateToFeature as EventListener);
+    };
   }, []);
 
   const renderCurrentPage = () => {
@@ -118,7 +135,9 @@ function App() {
   return (
     <ThemeProvider>
       <WalletProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </WalletProvider>
     </ThemeProvider>
   );

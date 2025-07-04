@@ -8,6 +8,7 @@ import { Input } from '../components/ui/Input';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useWallet } from '../contexts/WalletContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { ItemDetails, OwnershipDetails, ContractType } from '../types';
 import { getContract, OWNERSHIP_ADDRESS, stringToFelt252, felt252ToString, hex_it } from '../utils/blockchain';
 import { handleError } from '../utils/errorParser';
@@ -19,6 +20,7 @@ interface UserPageProps {
 export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const { isDark } = useTheme();
   const { provider, account, address, isConnected, connectWallet } = useWallet();
+  const { sendOwnershipTransferNotification } = useNotifications();
   const [loading, setLoading] = useState(false);
   
   // Registration state
@@ -144,7 +146,22 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const ownershipCode = events[0]["eri::events::EriEvents::OwnershipCode"].ownership_code;
       const temp = events[0]["eri::events::EriEvents::OwnershipCode"].temp_owner;
 
-      toast.success(`Transfer code generated: ${hex_it(ownershipCode)}`);
+      const transferCode = hex_it(ownershipCode);
+      
+      // Find the item name for the notification
+      const item = userItems.find(item => item.item_id === transferItemId);
+      const itemName = item?.name || transferItemId;
+
+      // Send notification to recipient
+      sendOwnershipTransferNotification(
+        transferToAddress,
+        transferItemId,
+        itemName,
+        address!,
+        transferCode
+      );
+
+      toast.success(`Transfer code generated and notification sent!`);
       setTransferItemId('');
       setTransferToAddress('');
     } catch (error: unknown) {
@@ -435,7 +452,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 Claim Ownership
               </h3>
               <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Use a transfer code to claim ownership of an item
+                Use a transfer code to claim ownership of an item. Check your notifications for transfer codes sent to you.
               </p>
             </div>
 
@@ -462,6 +479,16 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 Claim Ownership
               </Button>
             </form>
+
+            <div className={`mt-6 p-4 rounded-xl border ${
+              isDark 
+                ? 'bg-blue-500/10 border-blue-500/30' 
+                : 'bg-blue-50 border-blue-200'
+            }`}>
+              <p className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                💡 <strong>Tip:</strong> When someone transfers ownership to you, you'll receive a notification with the transfer code. Click the notification bell to see pending transfers.
+              </p>
+            </div>
           </Card>
         );
 
@@ -474,7 +501,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 Transfer Ownership
               </h3>
               <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Generate a transfer code to gift your item to another user
+                Generate a transfer code to gift your item to another user. They will receive an in-app notification.
               </p>
             </div>
 
@@ -485,12 +512,28 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               }}
               className="space-y-4"
             >
-              <Input
-                placeholder="Item ID to transfer"
-                value={transferItemId}
-                onChange={(e) => setTransferItemId(e.target.value)}
-                required
-              />
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Select Item to Transfer
+                </label>
+                <select
+                  value={transferItemId}
+                  onChange={(e) => setTransferItemId(e.target.value)}
+                  className={`w-full p-4 rounded-xl border transition-all duration-300 ${
+                    isDark 
+                      ? 'bg-gray-800/50 border-green-500/20 text-white focus:ring-green-500/50 focus:border-green-500/50' 
+                      : 'bg-white/50 border-green-600/20 text-gray-800 focus:ring-green-600/50 focus:border-green-600/50'
+                  } focus:outline-none focus:ring-2`}
+                  required
+                >
+                  <option value="">Select an item...</option>
+                  {userItems.map((item) => (
+                    <option key={item.item_id} value={item.item_id}>
+                      {item.name} (ID: {item.item_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Input
                 placeholder="Recipient wallet address"
                 value={transferToAddress}
@@ -504,9 +547,19 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 className="w-full"
               >
                 <Key className="w-4 h-4 mr-2" />
-                Generate Transfer Code
+                Generate Transfer Code & Send Notification
               </Button>
             </form>
+
+            <div className={`mt-6 p-4 rounded-xl border ${
+              isDark 
+                ? 'bg-green-500/10 border-green-500/30' 
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                ✨ <strong>New:</strong> The recipient will automatically receive an in-app notification with a direct link to claim ownership. No need to manually share codes!
+              </p>
+            </div>
           </Card>
         );
 

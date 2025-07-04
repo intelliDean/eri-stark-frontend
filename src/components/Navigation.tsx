@@ -4,6 +4,7 @@ import { Shield, Sun, Moon, Menu, X, Building2, User, QrCode } from 'lucide-reac
 import { useTheme } from '../contexts/ThemeContext';
 import { useWallet } from '../contexts/WalletContext';
 import { Button } from './ui/Button';
+import { NotificationBell } from './NotificationBell';
 
 interface NavigationProps {
   currentPage: 'landing' | 'manufacturer' | 'user' | 'qr-scan';
@@ -114,6 +115,9 @@ export const Navigation: React.FC<NavigationProps> = ({
 
           {/* Right side controls */}
           <div className="flex items-center space-x-4">
+            {/* Notification Bell - only show when connected */}
+            {isConnected && <NotificationBell />}
+
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
