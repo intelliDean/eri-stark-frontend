@@ -69,6 +69,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('Loading notifications for address:', address);
       
+      // Test basic Supabase connection first
+      const { data: testData, error: testError } = await supabase
+        .from('notifications')
+        .select('count', { count: 'exact', head: true });
+        
+      if (testError) {
+        console.error('Supabase connection test failed:', testError);
+        toast.error('Database connection failed. Please check your setup.');
+        return;
+      }
+      
+      console.log('Supabase connection OK. Total notifications in DB:', testData);
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -77,11 +90,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (error) {
         console.error('Supabase error loading notifications:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         toast.error('Failed to load notifications');
         return;
       }
 
       console.log('Raw notifications from database:', data);
+      console.log('Query used: recipient_address =', address);
+      
       const convertedNotifications = data.map(convertDbNotification);
       console.log('Converted notifications:', convertedNotifications);
       setNotifications(convertedNotifications);
@@ -90,6 +111,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log(`Loaded ${convertedNotifications.length} notifications`);
       } else {
         console.log('No notifications found for this address');
+        
+        // Debug: Check if there are ANY notifications in the table
+        const { data: allNotifications, error: allError } = await supabase
+          .from('notifications')
+          .select('recipient_address, title')
+          .limit(10);
+          
+        if (!allError && allNotifications) {
+          console.log('Sample notifications in database:', allNotifications);
+          console.log('Available recipient addresses:', allNotifications.map(n => n.recipient_address));
+        }
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -304,32 +336,64 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('Item:', itemName);
       console.log('Transfer code:', transferCode);
       
+      // Validate inputs
+      if (!recipientAddress || !senderAddress || !itemName) {
+        console.error('Missing required notification data');
+        toast.error('Missing required data for notification');
+        return;
+      }
+      
+      const notificationData = {
+        recipient_address: recipientAddress,
+        sender_address: senderAddress,
+        type: 'ownership_transfer',
+        title: 'New Ownership Transfer',
+        message: `You have received ownership transfer for "${itemName}"`,
+        data: {
+          itemId,
+          itemName,
+          fromAddress: senderAddress,
+          transferCode,
+          claimUrl: '#claim-ownership'
+        },
+        action_url: '#claim-ownership',
+        action_label: 'Claim Ownership'
+      };
+      
+      console.log('Notification data to insert:', notificationData);
+      
       const { error } = await supabase
         .from('notifications')
-        .insert({
-          recipient_address: recipientAddress,
-          sender_address: senderAddress,
-          type: 'ownership_transfer',
-          title: 'New Ownership Transfer',
-          message: `You have received ownership transfer for "${itemName}"`,
-          data: {
-            itemId,
-            itemName,
-            fromAddress: senderAddress,
-            transferCode,
-            claimUrl: '#claim-ownership'
-          },
-          action_url: '#claim-ownership',
-          action_label: 'Claim Ownership'
-        });
+        .insert(notificationData);
 
       if (error) {
         console.error('Supabase error sending notification:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         toast.error('Failed to send notification');
         return;
       }
 
       console.log('Notification sent successfully');
+      
+      // Verify the notification was inserted
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_address', recipientAddress)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (!verifyError && verifyData && verifyData.length > 0) {
+        console.log('Notification verified in database:', verifyData[0]);
+      } else {
+        console.error('Failed to verify notification insertion:', verifyError);
+      }
+      
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);

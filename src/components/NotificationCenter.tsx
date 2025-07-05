@@ -124,6 +124,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                   </div>
                 </div>
 
+                {/* Debug Info */}
+                <div className={`mb-4 p-3 rounded-lg text-xs ${
+                  isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
+                }`}>
+                  <p><strong>Debug Info:</strong></p>
+                  <p>Total: {notifications.length} | Unread: {unreadCount}</p>
+                  <p>Loading: {loading ? 'Yes' : 'No'}</p>
+                </div>
+
                 {/* Action Buttons */}
                 {notifications.length > 0 && (
                   <div className="flex gap-2">

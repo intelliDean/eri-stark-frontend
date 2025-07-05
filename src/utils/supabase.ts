@@ -3,11 +3,31 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Supabase Configuration:');
+console.log('- URL:', supabaseUrl ? 'Set' : 'Missing');
+console.log('- Anon Key:', supabaseAnonKey ? 'Set' : 'Missing');
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables!');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl);
+  console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Present' : 'Missing');
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Test the connection
+supabase.from('notifications').select('count', { count: 'exact', head: true })
+  .then(({ count, error }) => {
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+    } else {
+      console.log('Supabase connection successful. Total notifications:', count);
+    }
+  })
+  .catch(err => {
+    console.error('Supabase connection error:', err);
+  });
 
 export interface DatabaseNotification {
   id: string;
