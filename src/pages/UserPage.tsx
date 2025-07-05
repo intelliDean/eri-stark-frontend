@@ -136,6 +136,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       return;
     }
 
+    // Normalize the recipient address to ensure consistent format
+    const normalizedRecipientAddress = transferToAddress.startsWith('0x') 
+      ? '0x' + transferToAddress.slice(2).padStart(64, '0')
+      : transferToAddress;
+
     setLoading(true);
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
@@ -159,7 +164,8 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const itemName = item?.name || transferItemId;
 
       console.log('About to send notification:');
-      console.log('- Recipient:', transferToAddress);
+      console.log('- Recipient (original):', transferToAddress);
+      console.log('- Recipient (normalized):', normalizedRecipientAddress);
       console.log('- Item ID:', transferItemId);
       console.log('- Item Name:', itemName);
       console.log('- Sender:', address);
@@ -167,7 +173,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       
       // Send notification to recipient via Supabase
       await sendOwnershipTransferNotification(
-        transferToAddress,
+        normalizedRecipientAddress,
         transferItemId,
         itemName,
         address!,

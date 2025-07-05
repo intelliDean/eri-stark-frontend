@@ -67,7 +67,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
+      // Normalize address format - ensure it has proper padding
+      const normalizedAddress = address.startsWith('0x') 
+        ? '0x' + address.slice(2).padStart(64, '0')
+        : address;
+      
       console.log('Loading notifications for address:', address);
+      console.log('Normalized address:', normalizedAddress);
       
       // Debug: Check all notifications first
       const { data: allNotifications, error: allError } = await supabase
@@ -84,10 +90,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log('Address matches:', allNotifications?.filter(n => n.recipient_address === address));
       }
       
+      // Try both the original address and normalized address
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_address', address)
+        .or(`recipient_address.eq.${address},recipient_address.eq.${normalizedAddress}`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -103,7 +110,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       console.log('Raw notifications from database:', data);
-      console.log('Query used: recipient_address =', address);
+      console.log('Query used: recipient_address =', address, 'OR', normalizedAddress);
       
       const convertedNotifications = data.map(convertDbNotification);
       console.log('Converted notifications:', convertedNotifications);
@@ -137,7 +144,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!address) return;
 
+    // Normalize address for subscription
+    const normalizedAddress = address.startsWith('0x') 
+      ? '0x' + address.slice(2).padStart(64, '0')
+      : address;
+
     console.log('Setting up real-time subscription for:', address);
+    console.log('Normalized subscription address:', normalizedAddress);
     
     const channel = supabase
       .channel('notifications')
@@ -322,8 +335,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
+      // Normalize recipient address format
+      const normalizedRecipientAddress = recipientAddress.startsWith('0x') 
+        ? '0x' + recipientAddress.slice(2).padStart(64, '0')
+        : recipientAddress;
+      
+      const normalizedSenderAddress = senderAddress.startsWith('0x') 
+        ? '0x' + senderAddress.slice(2).padStart(64, '0')
+        : senderAddress;
+      
       console.log('Sending notification to:', recipientAddress);
+      console.log('Normalized recipient:', normalizedRecipientAddress);
       console.log('From:', senderAddress);
+      console.log('Normalized sender:', normalizedSenderAddress);
       console.log('Item:', itemName);
       console.log('Transfer code:', transferCode);
       
@@ -335,15 +359,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
       
       const notificationData = {
-        recipient_address: recipientAddress,
-        sender_address: senderAddress,
+        recipient_address: normalizedRecipientAddress,
+        sender_address: normalizedSenderAddress,
         type: 'ownership_transfer',
         title: 'New Ownership Transfer',
         message: `You have received ownership transfer for "${itemName}"`,
         data: {
           itemId,
           itemName,
-          fromAddress: senderAddress,
+          fromAddress: normalizedSenderAddress,
           transferCode,
           claimUrl: '#claim-ownership'
         },
