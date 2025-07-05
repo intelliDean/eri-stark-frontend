@@ -21,7 +21,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   onPageChange, 
   onToggleSidebar,
   showSidebarToggle = false,
-  sidebarVisible = false
+  sidebarVisible = false,
   onToggleNotifications,
   showNotificationCenter = false
 }) => {
