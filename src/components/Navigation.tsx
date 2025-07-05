@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Sun, Moon, Menu, X, Building2, User, QrCode, Home, Eye, EyeOff } from 'lucide-react';
+import { Shield, Sun, Moon, Menu, X, Building2, User, QrCode } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWallet } from '../contexts/WalletContext';
 import { Button } from './ui/Button';
@@ -60,7 +60,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 }`}
                 title={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
               >
-                {sidebarVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <Menu className="w-5 h-5" />
               </button>
             )}
             
@@ -89,22 +89,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                 ERI
               </span>
             </motion.div>
-
-            {/* Home button - visible when not on landing page */}
-            {currentPage !== 'landing' && (
-              <button
-                onClick={() => onPageChange('landing')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 font-medium ${
-                  isDark
-                    ? 'text-gray-300 hover:text-green-400 hover:bg-green-500/10' 
-                    : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
-                }`}
-                title="Go to home page"
-              >
-                <Home className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm">Home</span>
-              </button>
-            )}
           </div>
 
           {/* Center Navigation - Desktop */}
@@ -192,26 +176,6 @@ export const Navigation: React.FC<NavigationProps> = ({
             }`}
           >
             <div className="space-y-2 mb-4">
-              {/* Home button for mobile */}
-              {currentPage !== 'landing' && (
-                <button
-                  onClick={() => {
-                    onPageChange('landing');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium
-                    ${isDark
-                      ? 'text-gray-300 hover:text-green-400 hover:bg-green-500/10' 
-                      : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
-                    }
-                  `}
-                >
-                  <Home className="w-5 h-5" />
-                  <span>Home</span>
-                </button>
-              )}
-
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
