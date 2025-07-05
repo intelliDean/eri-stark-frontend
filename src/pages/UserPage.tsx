@@ -151,17 +151,6 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       return;
     }
 
-    // Validate recipient address format
-    if (!transferToAddress.startsWith('0x') || transferToAddress.length < 10) {
-      toast.error('Please enter a valid wallet address (must start with 0x)');
-      return;
-    }
-
-    // Normalize the recipient address to ensure consistent format
-    const normalizedRecipientAddress = transferToAddress.startsWith('0x') 
-      ? '0x' + transferToAddress.slice(2).padStart(64, '0')
-      : transferToAddress;
-
     setLoading(true);
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
@@ -184,31 +173,16 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const item = userItems.find(item => item.item_id === transferItemId);
       const itemName = item?.name || transferItemId;
 
-      console.log('About to send notification:');
-      console.log('- Recipient (original):', transferToAddress);
-      console.log('- Recipient (normalized):', normalizedRecipientAddress);
-      console.log('- Item ID:', transferItemId);
-      console.log('- Item Name:', itemName);
-      console.log('- Sender:', address);
-      console.log('- Transfer Code:', transferCode);
-      
       // Send notification to recipient via Supabase
-      try {
-        await sendOwnershipTransferNotification(
-          normalizedRecipientAddress,
-          transferItemId,
-          itemName,
-          address!,
-          transferCode
-        );
-      } catch (notificationError) {
-        console.error('Notification sending failed:', notificationError);
-        // Don't fail the entire operation if notification fails
-        toast.warning('Transfer code generated successfully, but notification could not be sent. Please share the code manually.');
-      }
+      await sendOwnershipTransferNotification(
+        transferToAddress,
+        transferItemId,
+        itemName,
+        address!,
+        transferCode
+      );
 
-      console.log('Notification sending completed');
-      toast.success(`Transfer code generated: ${transferCode}`);
+      toast.success(`Transfer code generated and notification sent!`);
       setTransferItemId('');
       setTransferToAddress('');
     } catch (error: unknown) {

@@ -67,50 +67,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Normalize address format - ensure it has proper padding
-      const normalizedAddress = address.startsWith('0x') 
-        ? '0x' + address.slice(2).padStart(64, '0')
-        : address;
-      
       console.log('Loading notifications for address:', address);
-      console.log('Normalized address:', normalizedAddress);
       
-      // Debug: Check all notifications first
-      const { data: allNotifications, error: allError } = await supabase
-        .from('notifications')
-        .select('*')
-        .limit(50);
-        
-      if (allError) {
-        console.error('Error fetching all notifications:', allError);
-      } else {
-        console.log('All notifications in database:', allNotifications);
-        console.log('Available recipient addresses:', allNotifications?.map(n => n.recipient_address));
-        console.log('Your address:', address);
-        console.log('Address matches:', allNotifications?.filter(n => n.recipient_address === address));
-      }
-      
-      // Try both the original address and normalized address
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .or(`recipient_address.eq.${address},recipient_address.eq.${normalizedAddress}`)
+        .eq('recipient_address', address)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error loading notifications:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('Error loading notifications:', error);
         toast.error('Failed to load notifications');
         return;
       }
 
       console.log('Raw notifications from database:', data);
-      console.log('Query used: recipient_address =', address, 'OR', normalizedAddress);
       
       const convertedNotifications = data.map(convertDbNotification);
       console.log('Converted notifications:', convertedNotifications);
@@ -144,13 +115,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!address) return;
 
-    // Normalize address for subscription
-    const normalizedAddress = address.startsWith('0x') 
-      ? '0x' + address.slice(2).padStart(64, '0')
-      : address;
-
     console.log('Setting up real-time subscription for:', address);
-    console.log('Normalized subscription address:', normalizedAddress);
     
     const channel = supabase
       .channel('notifications')
@@ -339,33 +304,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
-      // Check if Supabase is properly configured
-      if (!supabase) {
-        console.error('Supabase client not initialized');
-        toast.error('Notification service not available');
-        return;
-      }
-
-      // Normalize recipient address format
-      const normalizedRecipientAddress = recipientAddress.startsWith('0x') 
-        ? '0x' + recipientAddress.slice(2).padStart(64, '0')
-        : recipientAddress;
-      
-      const normalizedSenderAddress = senderAddress.startsWith('0x') 
-        ? '0x' + senderAddress.slice(2).padStart(64, '0')
-        : senderAddress;
-      
-      
-      // Validate inputs
-      if (!recipientAddress || !senderAddress || !itemName) {
-        console.error('Missing required notification data');
-        toast.error('Missing required data for notification');
-        return;
-      }
-      
-      console.log('Attempting to send notification with data:', {
-        recipient_address: normalizedRecipientAddress,
-        sender_address: normalizedSenderAddress,
+      console.log('Sending notification with data:', {
+        recipient_address: recipientAddress,
+        sender_address: senderAddress,
         type: 'ownership_transfer',
         title: 'New Ownership Transfer',
         message: `You have received ownership transfer for "${itemName}"`,
@@ -374,78 +315,36 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         transferCode
       });
 
-      const notificationData = {
-        recipient_address: normalizedRecipientAddress,
-        sender_address: normalizedSenderAddress,
-        type: 'ownership_transfer',
-        title: 'New Ownership Transfer',
-        message: `You have received ownership transfer for "${itemName}"`,
-        data: {
-          itemId,
-          itemName,
-          fromAddress: normalizedSenderAddress,
-          transferCode,
-          claimUrl: '#claim-ownership'
-        },
-        action_url: '#claim-ownership',
-        action_label: 'Claim Ownership'
-      };
-      
-      // Test Supabase connection first
-      console.log('Testing Supabase connection...');
-      const { data: testData, error: testError } = await supabase
+      const { error } = await supabase
         .from('notifications')
-        .select('count')
-        .limit(1);
-
-      if (testError) {
-        console.error('Supabase connection test failed:', testError);
-        toast.error('Unable to connect to notification service. Please check your internet connection.');
-        return;
-      }
-
-      console.log('Supabase connection test successful');
-
-      const { data: insertResult, error } = await supabase
-        .from('notifications')
-        .insert(notificationData)
-        .select();
+        .insert({
+          recipient_address: recipientAddress,
+          sender_address: senderAddress,
+          type: 'ownership_transfer',
+          title: 'New Ownership Transfer',
+          message: `You have received ownership transfer for "${itemName}"`,
+          data: {
+            itemId,
+            itemName,
+            fromAddress: senderAddress,
+            transferCode,
+            claimUrl: '#claim-ownership'
+          },
+          action_url: '#claim-ownership',
+          action_label: 'Claim Ownership'
+        });
 
       if (error) {
-        console.error('Supabase error sending notification:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        
-        // Provide more specific error messages
-        if (error.code === 'PGRST116') {
-          toast.error('Database table not found. Please contact support.');
-        } else if (error.message.includes('JWT')) {
-          toast.error('Authentication error. Please check Supabase configuration.');
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-          toast.error('Network error. Please check your internet connection and try again.');
-        } else {
-          toast.error(`Failed to send notification: ${error.message}`);
-        }
+        console.error('Error sending notification:', error);
+        toast.error('Failed to send notification');
         return;
       }
 
-      console.log('Notification sent successfully:', insertResult);
+      console.log('Notification sent successfully');
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);
-      
-      // Handle different types of errors
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        toast.error('Network connection failed. Please check your internet connection and Supabase configuration.');
-      } else if (error instanceof Error) {
-        toast.error(`Notification error: ${error.message}`);
-      } else {
-        toast.error('An unexpected error occurred while sending notification');
-      }
+      toast.error('Failed to send notification');
     }
   };
 
