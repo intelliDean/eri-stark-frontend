@@ -35,7 +35,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
       if (url === 'claim-ownership') {
         // Trigger navigation to user page with claim ownership feature
         window.dispatchEvent(new CustomEvent('navigate-to-feature', {
-          detail: { page: 'user', feature: 'claim-ownership' }
+          detail: { 
+            page: 'user', 
+            feature: 'claim-ownership',
+            data: notification.data
+          }
         }));
         onClose();
       }

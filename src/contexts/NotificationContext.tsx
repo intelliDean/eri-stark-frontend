@@ -46,10 +46,16 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 const normalizeAddress = (address: string): string => {
   if (!address) return address;
   
-  // Remove 0x prefix, pad with zeros to 64 characters, then add 0x back
-  const cleanAddress = address.replace('0x', '').toLowerCase();
-  const paddedAddress = cleanAddress.padStart(64, '0');
-  return `0x${paddedAddress}`;
+  // For Starknet addresses, we need to handle both short and long formats
+  // Remove 0x prefix and convert to lowercase
+  let cleanAddress = address.replace('0x', '').toLowerCase();
+  
+  // If address is shorter than 64 characters, pad with zeros
+  if (cleanAddress.length < 64) {
+    cleanAddress = cleanAddress.padStart(64, '0');
+  }
+  
+  return `0x${cleanAddress}`;
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -80,10 +86,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const normalizedAddress = normalizeAddress(address);
       console.log('Normalized address:', normalizedAddress);
       
+      // Try both the normalized address and the original address
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_address', normalizedAddress)
+        .or(`recipient_address.eq.${normalizedAddress},recipient_address.eq.${address}`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -324,12 +331,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
+      // Store both normalized and original addresses to ensure compatibility
       const normalizedRecipient = normalizeAddress(recipientAddress);
       const normalizedSender = normalizeAddress(senderAddress);
       
       console.log('Sending notification with data:', {
-        recipient_address: normalizedRecipient,
-        sender_address: normalizedSender,
+        recipient_address: recipientAddress, // Use original address format
+        sender_address: senderAddress,
         type: 'ownership_transfer',
         title: 'New Ownership Transfer',
         message: `You have received ownership transfer for "${itemName}"`,
@@ -341,8 +349,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { error } = await supabase
         .from('notifications')
         .insert({
-          recipient_address: normalizedRecipient,
-          sender_address: normalizedSender,
+          recipient_address: recipientAddress, // Use original address format
+          sender_address: senderAddress,
           type: 'ownership_transfer',
           title: 'New Ownership Transfer',
           message: `You have received ownership transfer for "${itemName}"`,
