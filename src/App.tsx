@@ -91,6 +91,7 @@ function AppContent() {
         onPageChange={setCurrentPage}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         showSidebarToggle={showSidebar}
+        sidebarVisible={sidebarOpen}
       />
       
       <div className="flex">
