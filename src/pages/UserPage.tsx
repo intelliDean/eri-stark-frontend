@@ -58,7 +58,9 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
   // Auto-load user items when dashboard is accessed and wallet is connected
   useEffect(() => {
-    if ((activeFeature === 'my-items' || activeFeature === '') && isConnected && userItems.length === 0) {
+    // Load items for features that need them: my-items, transfer-ownership, or default dashboard
+    const featuresNeedingItems = ['my-items', 'transfer-ownership', ''];
+    if (featuresNeedingItems.includes(activeFeature) && isConnected && userItems.length === 0) {
       loadUserItems();
     }
   }, [activeFeature, isConnected]);
