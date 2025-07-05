@@ -87,7 +87,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed right-0 top-0 h-full w-full sm:w-96 max-w-md z-50 shadow-2xl border-l ${
+            className={`fixed right-0 top-0 h-full w-full sm:w-96 max-w-md z-[9999] shadow-2xl border-l ${
               isDark 
                 ? 'bg-gray-900/95 border-green-500/20' 
                 : 'bg-white/95 border-green-600/20'

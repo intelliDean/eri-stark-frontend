@@ -47,10 +47,21 @@ export const NotificationBell: React.FC = () => {
         )}
       </button>
 
-      <NotificationCenter 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-      />
+      {/* Render notification center as a portal to body to avoid header clipping */}
+      {typeof document !== 'undefined' && (
+        <>
+          {isOpen && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, pointerEvents: 'none' }}>
+              <div style={{ pointerEvents: 'auto' }}>
+                <NotificationCenter 
+                  isOpen={isOpen} 
+                  onClose={() => setIsOpen(false)} 
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </>
   );
 };
