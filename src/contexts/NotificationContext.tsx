@@ -67,6 +67,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
+      console.log('Loading notifications for address:', address);
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -74,13 +76,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading notifications:', error);
+        console.error('Supabase error loading notifications:', error);
         toast.error('Failed to load notifications');
         return;
       }
 
+      console.log('Raw notifications from database:', data);
       const convertedNotifications = data.map(convertDbNotification);
+      console.log('Converted notifications:', convertedNotifications);
       setNotifications(convertedNotifications);
+      
+      if (convertedNotifications.length > 0) {
+        console.log(`Loaded ${convertedNotifications.length} notifications`);
+      } else {
+        console.log('No notifications found for this address');
+      }
     } catch (error) {
       console.error('Error loading notifications:', error);
       toast.error('Failed to load notifications');
@@ -92,8 +102,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Load notifications when wallet connects
   useEffect(() => {
     if (address) {
+      console.log('Wallet connected, loading notifications for:', address);
       loadNotifications();
     } else {
+      console.log('Wallet disconnected, clearing notifications');
       setNotifications([]);
     }
   }, [address]);
@@ -102,6 +114,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!address) return;
 
+    console.log('Setting up real-time subscription for:', address);
+    
     const channel = supabase
       .channel('notifications')
       .on(
@@ -113,6 +127,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `recipient_address=eq.${address}`,
         },
         (payload) => {
+          console.log('Real-time notification received:', payload);
           const newNotification = convertDbNotification(payload.new as DatabaseNotification);
           setNotifications(prev => [newNotification, ...prev]);
           
@@ -135,6 +150,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `recipient_address=eq.${address}`,
         },
         (payload) => {
+          console.log('Real-time notification update:', payload);
           const updatedNotification = convertDbNotification(payload.new as DatabaseNotification);
           setNotifications(prev =>
             prev.map(notification =>
@@ -146,6 +162,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [address]);
