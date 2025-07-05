@@ -20,7 +20,26 @@ interface UserPageProps {
 export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const { isDark } = useTheme();
   const { provider, account, address, isConnected, connectWallet } = useWallet();
-  const { sendOwnershipTransferNotification } = useNotifications();
+  
+  console.log('=== USER PAGE COMPONENT RENDER ===');
+  console.log('activeFeature:', activeFeature);
+  console.log('isConnected:', isConnected);
+  console.log('address:', address);
+  
+  const notificationContext = useNotifications();
+  console.log('Notification context in UserPage:', {
+    hasAddNotification: typeof notificationContext.addNotification === 'function',
+    hasSendOwnershipTransferNotification: typeof notificationContext.sendOwnershipTransferNotification === 'function',
+    contextKeys: Object.keys(notificationContext)
+  });
+  
+  const { sendOwnershipTransferNotification, addNotification } = notificationContext;
+  
+  console.log('Destructured functions:', {
+    addNotification: typeof addNotification,
+    sendOwnershipTransferNotification: typeof sendOwnershipTransferNotification
+  });
+  
   const [loading, setLoading] = useState(false);
   
   // Registration state
@@ -165,34 +184,53 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const generateTransferCode = async () => {
     if (!requireWalletConnection()) return;
 
+    console.log('=== GENERATE TRANSFER CODE START ===');
+    console.log('transferItemId:', transferItemId);
+    console.log('transferToAddress:', transferToAddress);
+    console.log('address (current user):', address);
+    
     if (!transferItemId || !transferToAddress) {
       toast.error('Please fill in all fields');
       return;
     }
 
+    console.log('Checking addNotification function availability...');
+    console.log('addNotification type:', typeof addNotification);
+    console.log('addNotification function:', addNotification);
+    
     setLoading(true);
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
       
+      console.log('Contract obtained, calling generate_change_of_ownership_code...');
       const res = await contract.generate_change_of_ownership_code(
         stringToFelt252(transferItemId),
         transferToAddress
       );
 
+      console.log('Contract call successful, processing transaction...');
       const txHash = res?.transaction_hash;
       const txResult = await provider!.waitForTransaction(txHash);
       const events = contract.parseEvents(txResult);
 
+      console.log('Transaction events:', events);
       const ownershipCode = events[0]["eri::events::EriEvents::OwnershipCode"].ownership_code;
       const temp = events[0]["eri::events::EriEvents::OwnershipCode"].temp_owner;
 
       const transferCode = hex_it(ownershipCode);
+      console.log('Generated transfer code:', transferCode);
       
       // Find the item name for the notification
       const item = userItems.find(item => item.item_id === transferItemId);
       const itemName = item?.name || transferItemId;
+      console.log('Item name for notification:', itemName);
 
       // Send notification to recipient via Supabase
+      console.log('Sending notification to recipient...');
+      console.log('Recipient address:', transferToAddress);
+      console.log('Sender address:', address);
+      console.log('Item details:', { transferItemId, itemName, transferCode });
+      
       await sendOwnershipTransferNotification(
         transferToAddress,
         transferItemId,
@@ -200,8 +238,26 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         address!,
         transferCode
       );
+      console.log('Recipient notification sent successfully');
 
       // Also send notification to sender (user A) about the generated transfer code
+      console.log('Preparing to send notification to sender (self)...');
+      console.log('About to call addNotification with data:', {
+        type: 'transfer_code_generated',
+        title: 'Transfer Code Generated',
+        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 10)}...`,
+        data: {
+          itemId: transferItemId,
+          itemName,
+          toAddress: transferToAddress,
+          transferCode,
+          revokeUrl: '#revoke-code'
+        },
+        actionUrl: '#revoke-code',
+        actionLabel: 'Revoke Code'
+      });
+      
+      console.log('Calling addNotification function...');
       await addNotification({
         type: 'transfer_code_generated',
         title: 'Transfer Code Generated',
@@ -216,10 +272,18 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         actionUrl: '#revoke-code',
         actionLabel: 'Revoke Code'
       });
+      console.log('addNotification call completed successfully');
+      
       toast.success(`Transfer code generated and notification sent!`);
       setTransferItemId('');
       setTransferToAddress('');
+      console.log('=== GENERATE TRANSFER CODE END ===');
     } catch (error: unknown) {
+      console.error('=== ERROR IN GENERATE TRANSFER CODE ===');
+      console.error('Error details:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       handleError(error, 'Failed to generate transfer code');
     } finally {
       setLoading(false);

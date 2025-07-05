@@ -414,9 +414,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 };
 
 export const useNotifications = () => {
+  console.log('=== USE NOTIFICATIONS HOOK CALLED ===');
   const context = useContext(NotificationContext);
   if (context === undefined) {
+    console.error('useNotifications called outside of NotificationProvider');
     throw new Error('useNotifications must be used within a NotificationProvider');
   }
+  console.log('useNotifications context:', {
+    hasAddNotification: typeof context.addNotification === 'function',
+    notificationCount: context.notifications.length,
+    unreadCount: context.unreadCount,
+    loading: context.loading
+  });
   return context;
 };
