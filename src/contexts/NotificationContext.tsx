@@ -42,6 +42,15 @@ interface NotificationContextType {
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+// Normalize address format to ensure consistent matching
+const normalizeAddress = (address: string): string => {
+  if (!address) return address;
+  
+  // Remove 0x prefix, pad with zeros to 64 characters, then add 0x back
+  const cleanAddress = address.replace('0x', '').toLowerCase();
+  const paddedAddress = cleanAddress.padStart(64, '0');
+  return `0x${paddedAddress}`;
+};
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address } = useWallet();
@@ -68,11 +77,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       console.log('Loading notifications for address:', address);
+      const normalizedAddress = normalizeAddress(address);
+      console.log('Normalized address:', normalizedAddress);
       
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_address', address)
+        .eq('recipient_address', normalizedAddress)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -117,6 +128,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     console.log('Setting up real-time subscription for:', address);
     
+    const normalizedAddress = normalizeAddress(address);
+    console.log('Setting up subscription for normalized address:', normalizedAddress);
+    
     const channel = supabase
       .channel('notifications')
       .on(
@@ -125,7 +139,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_address=eq.${address}`,
+          filter: `recipient_address=eq.${normalizedAddress}`,
         },
         (payload) => {
           console.log('Real-time notification received:', payload);
@@ -148,7 +162,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           event: 'UPDATE',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_address=eq.${address}`,
+          filter: `recipient_address=eq.${normalizedAddress}`,
         },
         (payload) => {
           console.log('Real-time notification update:', payload);
@@ -189,12 +203,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     if (!address) return;
 
+    const normalizedAddress = normalizeAddress(address);
+    
     try {
       const { error } = await supabase
         .from('notifications')
         .insert({
-          recipient_address: address,
-          sender_address: address,
+          recipient_address: normalizedAddress,
+          sender_address: normalizedAddress,
           type: notification.type,
           title: notification.title,
           message: notification.message,
@@ -238,11 +254,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const markAllAsRead = async () => {
     if (!address) return;
 
+    const normalizedAddress = normalizeAddress(address);
+    
     try {
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('recipient_address', address)
+        .eq('recipient_address', normalizedAddress)
         .eq('read', false);
 
       if (error) {
@@ -279,11 +297,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearAllNotifications = async () => {
     if (!address) return;
 
+    const normalizedAddress = normalizeAddress(address);
+    
     try {
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .eq('recipient_address', address);
+        .eq('recipient_address', normalizedAddress);
 
       if (error) {
         console.error('Error clearing notifications:', error);
@@ -304,9 +324,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
+      const normalizedRecipient = normalizeAddress(recipientAddress);
+      const normalizedSender = normalizeAddress(senderAddress);
+      
       console.log('Sending notification with data:', {
-        recipient_address: recipientAddress,
-        sender_address: senderAddress,
+        recipient_address: normalizedRecipient,
+        sender_address: normalizedSender,
         type: 'ownership_transfer',
         title: 'New Ownership Transfer',
         message: `You have received ownership transfer for "${itemName}"`,
@@ -318,8 +341,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { error } = await supabase
         .from('notifications')
         .insert({
-          recipient_address: recipientAddress,
-          sender_address: senderAddress,
+          recipient_address: normalizedRecipient,
+          sender_address: normalizedSender,
           type: 'ownership_transfer',
           title: 'New Ownership Transfer',
           message: `You have received ownership transfer for "${itemName}"`,
