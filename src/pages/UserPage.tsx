@@ -647,6 +647,20 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                   onChange={(e) => setVerifyItemId(e.target.value)}
                   required
                 />
+                
+                {/* Debug info for testing */}
+                {transferToAddress && (
+                  <div className={`p-3 rounded-lg text-xs ${
+                    isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                    <p><strong>Recipient:</strong> {transferToAddress}</p>
+                    <p><strong>Your Address:</strong> {address}</p>
+                    {transferItemId && (
+                      <p><strong>Item:</strong> {userItems.find(item => item.item_id === transferItemId)?.name || transferItemId}</p>
+                    )}
+                  </div>
+                )}
+                
                 <Button
                   type="submit"
                   loading={loading}
