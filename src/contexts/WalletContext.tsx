@@ -41,49 +41,32 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     // Listen for wallet events if available
-    if (typeof window !== 'undefined' && (window as any).starknet) {
-      (window as any).starknet.on('accountsChanged', handleAccountChange);
+    if (typeof window !== 'undefined' && window.starknet) {
+      window.starknet.on('accountsChanged', handleAccountChange);
       
       return () => {
-        (window as any).starknet.off('accountsChanged', handleAccountChange);
+        window.starknet.off('accountsChanged', handleAccountChange);
       };
     }
   }, [address]);
 
   const connectWallet = async (): Promise<void> => {
     try {
-      const connection = await connect({
-        webWalletUrl: "https://web.argent.xyz",
-        argentMobileOptions: {
-          dappName: "ERI Platform",
-          url: window.location.hostname,
-        },
-        modalMode: "canAsk",
-        modalTheme: "dark",
+      const { wallet } = await connect({
+        provider: PROVIDER
       });
       
-      if (connection && connection.isConnected) {
-        setProvider(connection.provider);
-        setAccount(connection.account);
-        setAddress(connection.selectedAddress);
-        toast.success(`Connected: ${connection.selectedAddress!.slice(0, 10)}...`);
+      if (wallet && wallet.isConnected) {
+        setProvider(wallet.provider);
+        setAccount(wallet.account);
+        setAddress(wallet.selectedAddress);
+        toast.success(`Connected: ${wallet.selectedAddress!.slice(0, 10)}...`);
       } else {
         toast.error("Failed to connect wallet");
       }
     } catch (error: unknown) {
-      console.error("Wallet connection error:", error);
       const message = error instanceof Error ? error.message : "Unknown error";
-      
-      // Handle specific error cases
-      if (message.includes("User rejected")) {
-        toast.error("Connection cancelled by user");
-      } else if (message.includes("No wallet")) {
-        toast.error("No wallet found. Please install Argent X or Braavos wallet.");
-      } else if (message.includes("Network")) {
-        toast.error("Network error. Please check your connection.");
-      } else {
-        toast.error(`Connection failed: ${message}`);
-      }
+      toast.error(`Error: ${message}`);
     }
   };
 
