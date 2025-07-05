@@ -69,18 +69,20 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('Loading notifications for address:', address);
       
-      // Test basic Supabase connection first
-      const { data: testData, error: testError } = await supabase
+      // Debug: Check all notifications first
+      const { data: allNotifications, error: allError } = await supabase
         .from('notifications')
-        .select('count', { count: 'exact', head: true });
+        .select('*')
+        .limit(50);
         
-      if (testError) {
-        console.error('Supabase connection test failed:', testError);
-        toast.error('Database connection failed. Please check your setup.');
-        return;
+      if (allError) {
+        console.error('Error fetching all notifications:', allError);
+      } else {
+        console.log('All notifications in database:', allNotifications);
+        console.log('Available recipient addresses:', allNotifications?.map(n => n.recipient_address));
+        console.log('Your address:', address);
+        console.log('Address matches:', allNotifications?.filter(n => n.recipient_address === address));
       }
-      
-      console.log('Supabase connection OK. Total notifications in DB:', testData);
       
       const { data, error } = await supabase
         .from('notifications')
@@ -111,17 +113,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log(`Loaded ${convertedNotifications.length} notifications`);
       } else {
         console.log('No notifications found for this address');
-        
-        // Debug: Check if there are ANY notifications in the table
-        const { data: allNotifications, error: allError } = await supabase
-          .from('notifications')
-          .select('recipient_address, title')
-          .limit(10);
-          
-        if (!allError && allNotifications) {
-          console.log('Sample notifications in database:', allNotifications);
-          console.log('Available recipient addresses:', allNotifications.map(n => n.recipient_address));
-        }
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -362,9 +353,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log('Notification data to insert:', notificationData);
       
-      const { error } = await supabase
+      const { data: insertResult, error } = await supabase
         .from('notifications')
-        .insert(notificationData);
+        .insert(notificationData)
+        .select();
 
       if (error) {
         console.error('Supabase error sending notification:', error);
@@ -378,21 +370,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      console.log('Notification sent successfully');
-      
-      // Verify the notification was inserted
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_address', recipientAddress)
-        .order('created_at', { ascending: false })
-        .limit(1);
-        
-      if (!verifyError && verifyData && verifyData.length > 0) {
-        console.log('Notification verified in database:', verifyData[0]);
-      } else {
-        console.error('Failed to verify notification insertion:', verifyError);
-      }
+      console.log('Notification sent successfully:', insertResult);
       
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {

@@ -16,13 +16,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Test the connection
-supabase.from('notifications').select('count', { count: 'exact', head: true })
-  .then(({ count, error }) => {
+// Test the connection with a simple query
+supabase.from('notifications').select('id').limit(1)
+  .then(({ data, error }) => {
     if (error) {
       console.error('Supabase connection test failed:', error);
     } else {
-      console.log('Supabase connection successful. Total notifications:', count);
+      console.log('Supabase connection successful. Can access notifications table.');
     }
   })
   .catch(err => {
