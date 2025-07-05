@@ -58,6 +58,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           dappName: "ERI Platform",
           url: window.location.hostname,
         },
+        modalMode: "canAsk",
+        modalTheme: "dark",
       });
       
       if (connection && connection.isConnected) {
@@ -69,8 +71,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toast.error("Failed to connect wallet");
       }
     } catch (error: unknown) {
+      console.error("Wallet connection error:", error);
       const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Error: ${message}`);
+      
+      // Handle specific error cases
+      if (message.includes("User rejected")) {
+        toast.error("Connection cancelled by user");
+      } else if (message.includes("No wallet")) {
+        toast.error("No wallet found. Please install Argent X or Braavos wallet.");
+      } else if (message.includes("Network")) {
+        toast.error("Network error. Please check your connection.");
+      } else {
+        toast.error(`Connection failed: ${message}`);
+      }
     }
   };
 
