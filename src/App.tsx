@@ -30,11 +30,16 @@ function AppContent() {
 
   // Listen for navigation events from notifications
   useEffect(() => {
-    const handleNavigateToFeature = (event: CustomEvent) => {
-      const { page, feature } = event.detail;
+    const handleNavigateToFeature = (event: CustomEvent<{ page: string; feature: string; data?: any }>) => {
+      const { page, feature, data } = event.detail;
       setCurrentPage(page);
       setActiveFeature(feature);
       setSidebarOpen(true);
+      
+      // Store navigation data for components to access
+      if (data) {
+        sessionStorage.setItem('navigationData', JSON.stringify(data));
+      }
     };
 
     window.addEventListener('navigate-to-feature', handleNavigateToFeature as EventListener);
@@ -49,7 +54,7 @@ function AppContent() {
       case 'manufacturer':
         return <ManufacturerPage activeFeature={activeFeature} />;
       case 'user':
-        return <UserPage activeFeature={activeFeature} />;
+        return <UserPage activeFeature={activeFeature} key={activeFeature} />;
       case 'qr-scan':
         return <QRScanPage />;
       default:

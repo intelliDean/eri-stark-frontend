@@ -10,12 +10,6 @@ export const NotificationBell: React.FC = () => {
   const { unreadCount, notifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log('NotificationBell - Total notifications:', notifications.length);
-    console.log('NotificationBell - Unread count:', unreadCount);
-  }, [notifications, unreadCount]);
-
   return (
     <>
       <button
@@ -25,7 +19,6 @@ export const NotificationBell: React.FC = () => {
             ? 'text-gray-300 hover:text-green-400 hover:bg-green-500/10' 
             : 'text-gray-600 hover:text-green-600 hover:bg-green-600/10'
         }`}
-        title={`${notifications.length} total notifications, ${unreadCount} unread`}
       >
         <Bell className="w-5 h-5" />
         

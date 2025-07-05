@@ -37,6 +37,25 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const [verifyItemId, setVerifyItemId] = useState('');
   const [ownershipDetails, setOwnershipDetails] = useState<OwnershipDetails | null>(null);
 
+  // Auto-fill claim code from notification data
+  useEffect(() => {
+    if (activeFeature === 'claim-ownership') {
+      const navigationData = sessionStorage.getItem('navigationData');
+      if (navigationData) {
+        try {
+          const data = JSON.parse(navigationData);
+          if (data.transferCode) {
+            setClaimCode(data.transferCode);
+            // Clear the navigation data after using it
+            sessionStorage.removeItem('navigationData');
+          }
+        } catch (error) {
+          console.error('Error parsing navigation data:', error);
+        }
+      }
+    }
+  }, [activeFeature]);
+
   // Auto-load user items when dashboard is accessed and wallet is connected
   useEffect(() => {
     if ((activeFeature === 'my-items' || activeFeature === '') && isConnected && userItems.length === 0) {
@@ -505,7 +524,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               </Button>
             </form>
 
-            <div className={`mt-6 p-4 rounded-xl border ${
+            <div className={`mt-4 p-4 rounded-xl border ${
               isDark 
                 ? 'bg-blue-500/10 border-blue-500/30' 
                 : 'bg-blue-50 border-blue-200'
@@ -655,20 +674,6 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                   onChange={(e) => setVerifyItemId(e.target.value)}
                   required
                 />
-                
-                {/* Debug info for testing */}
-                {transferToAddress && (
-                  <div className={`p-3 rounded-lg text-xs ${
-                    isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
-                  }`}>
-                    <p><strong>Recipient:</strong> {transferToAddress}</p>
-                    <p><strong>Your Address:</strong> {address}</p>
-                    {transferItemId && (
-                      <p><strong>Item:</strong> {userItems.find(item => item.item_id === transferItemId)?.name || transferItemId}</p>
-                    )}
-                  </div>
-                )}
-                
                 <Button
                   type="submit"
                   loading={loading}

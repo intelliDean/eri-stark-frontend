@@ -211,7 +211,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       if (url === 'claim-ownership') {
         window.dispatchEvent(new CustomEvent('navigate-to-feature', {
-          detail: { page: 'user', feature: 'claim-ownership' }
+          detail: { 
+            page: 'user', 
+            feature: 'claim-ownership',
+            data: notification.data
+          }
         }));
       }
     }
@@ -344,12 +348,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         ? '0x' + senderAddress.slice(2).padStart(64, '0')
         : senderAddress;
       
-      console.log('Sending notification to:', recipientAddress);
-      console.log('Normalized recipient:', normalizedRecipientAddress);
-      console.log('From:', senderAddress);
-      console.log('Normalized sender:', normalizedSenderAddress);
-      console.log('Item:', itemName);
-      console.log('Transfer code:', transferCode);
       
       // Validate inputs
       if (!recipientAddress || !senderAddress || !itemName) {
@@ -375,8 +373,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         action_label: 'Claim Ownership'
       };
       
-      console.log('Notification data to insert:', notificationData);
-      
       const { data: insertResult, error } = await supabase
         .from('notifications')
         .insert(notificationData)
@@ -394,8 +390,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      console.log('Notification sent successfully:', insertResult);
-      
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -404,7 +398,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const refreshNotifications = async () => {
-    console.log('Refreshing notifications...');
     await loadNotifications();
   };
 
