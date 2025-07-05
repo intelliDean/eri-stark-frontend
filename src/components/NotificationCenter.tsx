@@ -32,13 +32,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
       // Parse the hash-based routing
       const url = notification.actionUrl.replace('#', '');
       
-      // If it's claim-ownership, we need to set the active feature
       if (url === 'claim-ownership') {
-        // Trigger navigation to user page with claim ownership feature
         window.dispatchEvent(new CustomEvent('navigate-to-feature', {
           detail: { 
             page: 'user', 
             feature: 'claim-ownership',
+            data: notification.data
+          }
+        }));
+        onClose();
+      } else if (url === 'revoke-code') {
+        // Navigate to revoke code page with transfer code data
+        window.dispatchEvent(new CustomEvent('navigate-to-feature', {
+          detail: { 
+            page: 'user', 
+            feature: 'revoke-code',
             data: notification.data
           }
         }));
@@ -212,13 +220,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                                   : 'bg-green-100 text-green-600'
                                 : notification.type === 'transfer_code_generated'
                                   ? isDark
-                                    ? 'bg-blue-500/20 text-blue-400'
-                                    : 'bg-blue-100 text-blue-600'
+                                    ? 'bg-orange-500/20 text-orange-400'
+                                    : 'bg-orange-100 text-orange-600'
                                 : isDark
                                   ? 'bg-blue-500/20 text-blue-400'
                                   : 'bg-blue-100 text-blue-600'
                             }`}>
-                              <Icon className="w-4 h-4" />
+                              {notification.type === 'transfer_code_generated' ? (
+                                <Key className="w-4 h-4" />
+                              ) : (
+                                <Icon className="w-4 h-4" />
+                              )}
                             </div>
 
                             <div className="flex-1 min-w-0">

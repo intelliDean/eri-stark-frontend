@@ -215,7 +215,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             data: notification.data
           }
         }));
-        onClose();
+        // Note: onClose is handled by the NotificationCenter component
+      }
     }
   };
 

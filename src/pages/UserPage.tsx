@@ -245,7 +245,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.log('About to call addNotification with data:', {
         type: 'transfer_code_generated',
         title: 'Transfer Code Generated',
-        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 10)}...`,
+        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
         data: {
           itemId: transferItemId,
           itemName,
@@ -261,7 +261,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       await addNotification({
         type: 'transfer_code_generated',
         title: 'Transfer Code Generated',
-        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 10)}...`,
+        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
         data: {
           itemId: transferItemId,
           itemName,
@@ -274,7 +274,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       });
       console.log('addNotification call completed successfully');
       
-      toast.success(`Transfer code generated and notification sent!`);
+      toast.success(`Transfer code generated! Notifications sent to both parties.`);
       setTransferItemId('');
       setTransferToAddress('');
       console.log('=== GENERATE TRANSFER CODE END ===');
