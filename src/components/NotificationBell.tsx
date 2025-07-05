@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -7,7 +8,7 @@ import { NotificationCenter } from './NotificationCenter';
 
 export const NotificationBell: React.FC = () => {
   const { isDark } = useTheme();
-  const { unreadCount, notifications } = useNotifications();
+  const { unreadCount } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -47,20 +48,13 @@ export const NotificationBell: React.FC = () => {
         )}
       </button>
 
-      {/* Render notification center as a portal to body to avoid header clipping */}
-      {typeof document !== 'undefined' && (
-        <>
-          {isOpen && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, pointerEvents: 'none' }}>
-              <div style={{ pointerEvents: 'auto' }}>
-                <NotificationCenter 
-                  isOpen={isOpen} 
-                  onClose={() => setIsOpen(false)} 
-                />
-              </div>
-            </div>
-          )}
-        </>
+      {/* Render notification center as a portal to document.body */}
+      {isOpen && createPortal(
+        <NotificationCenter 
+          isOpen={isOpen} 
+          onClose={() => setIsOpen(false)} 
+        />,
+        document.body
       )}
     </>
   );
