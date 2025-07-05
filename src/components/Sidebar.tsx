@@ -253,21 +253,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </motion.div>
 
-      {/* Show sidebar button when hidden */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            onClick={onToggle}
-            className="fixed left-4 top-20 z-40 p-3 bg-gray-900/95 backdrop-blur-xl border border-green-500/20 rounded-xl text-green-400 hover:text-green-300 hover:bg-green-500/10 transition-all duration-300 shadow-lg"
-            title="Show sidebar"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </>
   );
 };
