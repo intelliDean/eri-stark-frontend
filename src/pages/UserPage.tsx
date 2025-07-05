@@ -598,7 +598,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 Revoke Transfer Code
               </h3>
               <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Cancel a previously generated transfer code
+                Cancel a previously generated transfer code. Use the transfer code you generated earlier.
               </p>
             </div>
 
@@ -610,11 +610,16 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               className="space-y-4"
             >
               <Input
-                placeholder="Item hash of transfer to revoke"
+                placeholder="Enter the transfer code to revoke"
                 value={revokeItemHash}
                 onChange={(e) => setRevokeItemHash(e.target.value)}
                 required
               />
+              <div className={`p-3 rounded-lg text-xs ${
+                isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
+              }`}>
+                💡 <strong>Tip:</strong> This should be the same transfer code you generated when creating the ownership transfer. You can find it in your notifications.
+              </div>
               <Button
                 type="submit"
                 loading={loading}

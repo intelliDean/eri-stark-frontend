@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, Check, CheckCheck, Trash2, Gift, Clock, ExternalLink, RefreshCw } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, Trash2, Gift, Clock, ExternalLink, RefreshCw, Key } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { useNotifications } from '../contexts/NotificationContext';

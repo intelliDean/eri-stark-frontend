@@ -5,7 +5,7 @@ import { supabase, DatabaseNotification } from '../utils/supabase';
 
 export interface Notification {
   id: string;
-  type: 'ownership_transfer' | 'ownership_claimed' | 'general';
+  type: 'ownership_transfer' | 'ownership_claimed' | 'transfer_code_generated' | 'general';
   title: string;
   message: string;
   timestamp: number;
@@ -15,8 +15,10 @@ export interface Notification {
     itemName?: string;
     fromUser?: string;
     fromAddress?: string;
+    toAddress?: string;
     transferCode?: string;
     claimUrl?: string;
+    revokeUrl?: string;
   };
   actionUrl?: string;
   actionLabel?: string;
