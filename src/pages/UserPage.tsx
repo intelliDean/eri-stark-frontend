@@ -193,16 +193,22 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.log('- Transfer Code:', transferCode);
       
       // Send notification to recipient via Supabase
-      await sendOwnershipTransferNotification(
-        normalizedRecipientAddress,
-        transferItemId,
-        itemName,
-        address!,
-        transferCode
-      );
+      try {
+        await sendOwnershipTransferNotification(
+          normalizedRecipientAddress,
+          transferItemId,
+          itemName,
+          address!,
+          transferCode
+        );
+      } catch (notificationError) {
+        console.error('Notification sending failed:', notificationError);
+        // Don't fail the entire operation if notification fails
+        toast.warning('Transfer code generated successfully, but notification could not be sent. Please share the code manually.');
+      }
 
       console.log('Notification sending completed');
-      toast.success(`Transfer code generated and notification sent!`);
+      toast.success(`Transfer code generated: ${transferCode}`);
       setTransferItemId('');
       setTransferToAddress('');
     } catch (error: unknown) {

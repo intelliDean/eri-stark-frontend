@@ -339,6 +339,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
+      // Check if Supabase is properly configured
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        toast.error('Notification service not available');
+        return;
+      }
+
       // Normalize recipient address format
       const normalizedRecipientAddress = recipientAddress.startsWith('0x') 
         ? '0x' + recipientAddress.slice(2).padStart(64, '0')
@@ -356,6 +363,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
       
+      console.log('Attempting to send notification with data:', {
+        recipient_address: normalizedRecipientAddress,
+        sender_address: normalizedSenderAddress,
+        type: 'ownership_transfer',
+        title: 'New Ownership Transfer',
+        message: `You have received ownership transfer for "${itemName}"`,
+        itemId,
+        itemName,
+        transferCode
+      });
+
       const notificationData = {
         recipient_address: normalizedRecipientAddress,
         sender_address: normalizedSenderAddress,
@@ -373,6 +391,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         action_label: 'Claim Ownership'
       };
       
+      // Test Supabase connection first
+      console.log('Testing Supabase connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('notifications')
+        .select('count')
+        .limit(1);
+
+      if (testError) {
+        console.error('Supabase connection test failed:', testError);
+        toast.error('Unable to connect to notification service. Please check your internet connection.');
+        return;
+      }
+
+      console.log('Supabase connection test successful');
+
       const { data: insertResult, error } = await supabase
         .from('notifications')
         .insert(notificationData)
@@ -386,14 +419,33 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           hint: error.hint,
           code: error.code
         });
-        toast.error('Failed to send notification');
+        
+        // Provide more specific error messages
+        if (error.code === 'PGRST116') {
+          toast.error('Database table not found. Please contact support.');
+        } else if (error.message.includes('JWT')) {
+          toast.error('Authentication error. Please check Supabase configuration.');
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          toast.error('Network error. Please check your internet connection and try again.');
+        } else {
+          toast.error(`Failed to send notification: ${error.message}`);
+        }
         return;
       }
 
+      console.log('Notification sent successfully:', insertResult);
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);
-      toast.error('Failed to send notification');
+      
+      // Handle different types of errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error('Network connection failed. Please check your internet connection and Supabase configuration.');
+      } else if (error instanceof Error) {
+        toast.error(`Notification error: ${error.message}`);
+      } else {
+        toast.error('An unexpected error occurred while sending notification');
+      }
     }
   };
 
