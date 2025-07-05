@@ -40,11 +40,11 @@ export const Navigation: React.FC<NavigationProps> = ({
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${
+    <nav className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300 ${
       isDark 
         ? 'bg-black/20 border-green-500/20' 
         : 'bg-white/20 border-green-600/20'
-    }`}>
+    } ${sidebarVisible ? 'lg:ml-64' : ''}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Left side */}
