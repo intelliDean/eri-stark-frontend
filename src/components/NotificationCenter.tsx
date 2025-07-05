@@ -83,18 +83,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed right-0 top-0 h-full w-96 z-50 shadow-2xl border-l ${
+            className={`fixed right-0 top-0 h-full w-full sm:w-96 max-w-md z-50 shadow-2xl border-l ${
               isDark 
                 ? 'bg-gray-900/95 border-green-500/20' 
                 : 'bg-white/95 border-green-600/20'
-            } backdrop-blur-xl`}
+            } backdrop-blur-xl overflow-hidden`}
           >
             <div className="flex flex-col h-full">
               {/* Header */}
-              <div className={`p-6 border-b ${
+              <div className={`p-4 sm:p-6 border-b ${
                 isDark ? 'border-green-500/20' : 'border-green-600/20'
               }`}>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
                   <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                     Notifications
                   </h2>
@@ -126,13 +126,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
 
                 {/* Action Buttons */}
                 {notifications.length > 0 && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {unreadCount > 0 && (
                       <Button
                         onClick={markAllAsRead}
                         variant="outline"
                         size="sm"
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
                         disabled={loading}
                       >
                         <CheckCheck className="w-4 h-4 mr-2" />
@@ -143,7 +143,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                       onClick={clearAllNotifications}
                       variant="ghost"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm"
                       disabled={loading}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -156,11 +156,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
               {/* Notifications List */}
               <div className="flex-1 overflow-y-auto">
                 {loading ? (
-                  <div className="flex items-center justify-center h-32">
+                  <div className="flex items-center justify-center h-32 p-4">
                     <RefreshCw className={`w-8 h-8 animate-spin ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   </div>
                 ) : notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full p-8">
+                  <div className="flex flex-col items-center justify-center h-full p-4 sm:p-8">
                     <Bell className={`w-16 h-16 mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                     <p className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       No notifications yet
@@ -170,7 +170,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                     </p>
                   </div>
                 ) : (
-                  <div className="p-4 space-y-3">
+                  <div className="p-2 sm:p-4 space-y-3">
                     {notifications.map((notification) => {
                       const Icon = getNotificationIcon(notification.type);
                       
@@ -179,7 +179,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                           key={notification.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`
+                          className={`w-full
                             relative p-4 rounded-xl border cursor-pointer transition-all duration-300
                             ${!notification.read 
                               ? isDark
@@ -200,7 +200,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                           )}
 
                           <div className="flex items-start space-x-3">
-                            <div className={`p-2 rounded-lg ${
+                            <div className={`p-2 rounded-lg flex-shrink-0 ${
                               notification.type === 'ownership_transfer'
                                 ? isDark
                                   ? 'bg-green-500/20 text-green-400'
@@ -216,7 +216,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                               <h4 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>
                                 {notification.title}
                               </h4>
-                              <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              <p className={`text-sm mt-1 break-words ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                 {notification.message}
                               </p>
                               
@@ -229,7 +229,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                               )}
 
                               {notification.data?.transferCode && (
-                                <p className={`text-xs mt-1 font-mono ${
+                                <p className={`text-xs mt-1 font-mono break-all ${
                                   isDark ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
                                   Code: {notification.data.transferCode.slice(0, 10)}...
@@ -239,15 +239,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                               <div className="flex items-center justify-between mt-3">
                                 <div className={`flex items-center text-xs ${
                                   isDark ? 'text-gray-400' : 'text-gray-500'
-                                }`}>
+                                } flex-shrink-0`}>
                                   <Clock className="w-3 h-3 mr-1" />
                                   {formatTimestamp(notification.timestamp)}
                                 </div>
 
                                 {notification.actionLabel && (
-                                  <div className={`flex items-center text-xs font-medium ${
+                                  <div className={`flex items-center text-xs font-medium ml-2 ${
                                     isDark ? 'text-green-400' : 'text-green-600'
-                                  }`}>
+                                  } flex-shrink-0`}>
                                     {notification.actionLabel}
                                     <ExternalLink className="w-3 h-3 ml-1" />
                                   </div>
@@ -257,14 +257,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                           </div>
 
                           {/* Action buttons */}
-                          <div className="flex items-center justify-end space-x-2 mt-3">
+                          <div className="flex items-center justify-end space-x-1 mt-3">
                             {!notification.read && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   markAsRead(notification.id);
                                 }}
-                                className={`p-1 rounded transition-colors ${
+                                className={`p-1.5 rounded transition-colors ${
                                   isDark 
                                     ? 'text-gray-400 hover:text-green-400' 
                                     : 'text-gray-500 hover:text-green-600'
@@ -279,7 +279,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                                 e.stopPropagation();
                                 removeNotification(notification.id);
                               }}
-                              className={`p-1 rounded transition-colors ${
+                              className={`p-1.5 rounded transition-colors ${
                                 isDark 
                                   ? 'text-gray-400 hover:text-red-400' 
                                   : 'text-gray-500 hover:text-red-600'
