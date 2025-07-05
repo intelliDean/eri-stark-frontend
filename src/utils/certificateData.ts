@@ -27,7 +27,6 @@ const types = {
   ],
 };
 
-
 function getDomain(): StarknetDomain {
   return {
     name: "Authenticity",
@@ -57,5 +56,3 @@ export function getTypedData(myStruct: Certificate): TypedData {
     },
   };
 }
-
-

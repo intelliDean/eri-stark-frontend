@@ -7,7 +7,7 @@ export const OWNERSHIP_ADDRESS: ContractAddress = import.meta.env.VITE_OWNERSHIP
 export const AUTHENTICITY_ADDRESS: ContractAddress = import.meta.env.VITE_AUTHENTICITY_ADDRESS || "0x456";
 
 export const PROVIDER = new RpcProvider({
-    nodeUrl: import.meta.env.VITE_SEPOLIA_URL || "https://starknet-sepolia.public.blastapi.io"
+    nodeUrl: import.meta.env.VITE_SEPOLIA_URL || "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
 });
 
 export const getContract = async (
@@ -18,8 +18,7 @@ export const getContract = async (
     address?: ContractAddress | null
 ): Promise<Contract> => {
     try {
-
-        const {abi} = await provider.getClassAt(contractAddress);
+        const { abi } = await provider.getClassAt(contractAddress);
         if (!abi) {
             throw new Error("No ABI found for the contract.");
         }
@@ -50,7 +49,7 @@ export const felt252ToString = (felt: string): string => {
         const hex_it = "0x" + bn.toString(16);
         return shortString.decodeShortString(hex_it);
     } catch (error: any) {
-        toast.error(`Error decoding felt252: ${error.message}`);
+        console.error(`Error decoding felt252: ${error.message}`);
         return "";
     }
 };
