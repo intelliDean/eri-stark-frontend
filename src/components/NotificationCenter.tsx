@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, Check, CheckCheck, Trash2, Gift, Clock, ExternalLink, RefreshCw, Key } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -68,7 +69,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
     }
   };
 
-  return (
+  const content = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[99999] pointer-events-none">
@@ -305,4 +306,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
       )}
     </AnimatePresence>
   );
+
+  // Render as portal to document.body
+  return createPortal(content, document.body);
 };

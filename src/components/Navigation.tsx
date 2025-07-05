@@ -12,6 +12,8 @@ interface NavigationProps {
   onToggleSidebar?: () => void;
   showSidebarToggle?: boolean;
   sidebarVisible?: boolean;
+  onToggleNotifications?: () => void;
+  showNotificationCenter?: boolean;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ 
@@ -20,6 +22,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onToggleSidebar,
   showSidebarToggle = false,
   sidebarVisible = false
+  onToggleNotifications,
+  showNotificationCenter = false
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const { address, isConnected, connectWallet, disconnectWallet } = useWallet();
@@ -123,7 +127,12 @@ export const Navigation: React.FC<NavigationProps> = ({
           {/* Right side controls */}
           <div className="flex items-center space-x-4">
             {/* Notification Bell - only show when connected */}
-            {isConnected && <NotificationBell />}
+            {isConnected && (
+              <NotificationBell 
+                onToggle={onToggleNotifications}
+                isOpen={showNotificationCenter}
+              />
+            )}
 
             {/* Theme toggle */}
             <button

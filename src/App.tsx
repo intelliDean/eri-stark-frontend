@@ -16,6 +16,7 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'manufacturer' | 'user' | 'qr-scan'>('landing');
   const [sidebarOpen, setSidebarOpen] = useState(false); // Hidden by default
   const [activeFeature, setActiveFeature] = useState<string>('');
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
 
   // Handle URL parameters for QR code scanning
   useEffect(() => {
@@ -97,6 +98,8 @@ function AppContent() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         showSidebarToggle={showSidebar}
         sidebarVisible={sidebarOpen && showSidebar}
+        onToggleNotifications={() => setShowNotificationCenter(!showNotificationCenter)}
+        showNotificationCenter={showNotificationCenter}
       />
       
       <div className="flex">
@@ -118,6 +121,14 @@ function AppContent() {
           {renderCurrentPage()}
         </main>
       </div>
+      
+      {/* Render NotificationCenter as portal when needed */}
+      {showNotificationCenter && (
+        <NotificationCenter 
+          isOpen={showNotificationCenter} 
+          onClose={() => setShowNotificationCenter(false)} 
+        />
+      )}
       
       <ToastContainer
         position="top-right"
