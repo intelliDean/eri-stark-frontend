@@ -16,21 +16,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Test the connection with a simple query that doesn't depend on specific tables
-supabase.rpc('version')
-  .then(({ data, error }) => {
-    if (error) {
-      console.warn('Supabase connection test failed:', error.message);
-      console.log('This might be expected if database migrations haven\'t been applied yet.');
-    } else {
-      console.log('Supabase connection successful.');
-    }
-  })
-  .catch(err => {
-    console.warn('Supabase connection error:', err.message);
-    console.log('Please ensure your Supabase project is set up and migrations are applied.');
-  });
-
 export interface DatabaseNotification {
   id: string;
   recipient_address: string;
