@@ -3,6 +3,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Navigation } from './components/Navigation';
 import { Sidebar } from './components/Sidebar';
+import { NotificationCenter } from './components/NotificationCenter';
 import { LandingPage } from './pages/LandingPage';
 import { ManufacturerPage } from './pages/ManufacturerPage';
 import { UserPage } from './pages/UserPage';
