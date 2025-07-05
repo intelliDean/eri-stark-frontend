@@ -37,6 +37,25 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const [verifyItemId, setVerifyItemId] = useState('');
   const [ownershipDetails, setOwnershipDetails] = useState<OwnershipDetails | null>(null);
 
+  // Auto-fill revoke code from notification data
+  useEffect(() => {
+    if (activeFeature === 'revoke-code') {
+      const navigationData = sessionStorage.getItem('navigationData');
+      if (navigationData) {
+        try {
+          const data = JSON.parse(navigationData);
+          if (data.transferCode) {
+            setRevokeItemHash(data.transferCode);
+            // Clear the navigation data after using it
+            sessionStorage.removeItem('navigationData');
+          }
+        } catch (error) {
+          console.error('Error parsing navigation data:', error);
+        }
+      }
+    }
+  }, [activeFeature]);
+
   // Auto-fill claim code from notification data
   useEffect(() => {
     if (activeFeature === 'claim-ownership') {
@@ -182,6 +201,21 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         transferCode
       );
 
+      // Also send notification to sender (user A) about the generated transfer code
+      await addNotification({
+        type: 'transfer_code_generated',
+        title: 'Transfer Code Generated',
+        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 10)}...`,
+        data: {
+          itemId: transferItemId,
+          itemName,
+          toAddress: transferToAddress,
+          transferCode,
+          revokeUrl: '#revoke-code'
+        },
+        actionUrl: '#revoke-code',
+        actionLabel: 'Revoke Code'
+      });
       toast.success(`Transfer code generated and notification sent!`);
       setTransferItemId('');
       setTransferToAddress('');
@@ -600,6 +634,17 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 Cancel a previously generated transfer code. Use the transfer code you generated earlier.
               </p>
+              {revokeItemHash && (
+                <div className={`mt-4 p-3 rounded-lg border ${
+                  isDark 
+                    ? 'bg-green-500/10 border-green-500/30' 
+                    : 'bg-green-50 border-green-200'
+                }`}>
+                  <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                    ✅ Transfer code loaded from notification
+                  </p>
+                </div>
+              )}
             </div>
 
             <form

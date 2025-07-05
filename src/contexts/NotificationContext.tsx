@@ -206,6 +206,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         }));
       }
+      } else if (url === 'revoke-code') {
+        // Navigate to revoke code page with transfer code data
+        window.dispatchEvent(new CustomEvent('navigate-to-feature', {
+          detail: { 
+            page: 'user', 
+            feature: 'revoke-code',
+            data: notification.data
+          }
+        }));
+        onClose();
     }
   };
 

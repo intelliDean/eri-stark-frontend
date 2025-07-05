@@ -210,6 +210,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                                 ? isDark
                                   ? 'bg-green-500/20 text-green-400'
                                   : 'bg-green-100 text-green-600'
+                                : notification.type === 'transfer_code_generated'
+                                  ? isDark
+                                    ? 'bg-blue-500/20 text-blue-400'
+                                    : 'bg-blue-100 text-blue-600'
                                 : isDark
                                   ? 'bg-blue-500/20 text-blue-400'
                                   : 'bg-blue-100 text-blue-600'
