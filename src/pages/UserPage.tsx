@@ -164,6 +164,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.log('- Item Name:', itemName);
       console.log('- Sender:', address);
       console.log('- Transfer Code:', transferCode);
+      
       // Send notification to recipient via Supabase
       await sendOwnershipTransferNotification(
         transferToAddress,
@@ -173,6 +174,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
         transferCode
       );
 
+      console.log('Notification sending completed');
       toast.success(`Transfer code generated and notification sent!`);
       setTransferItemId('');
       setTransferToAddress('');

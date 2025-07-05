@@ -338,6 +338,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const refreshNotifications = async () => {
+    console.log('Refreshing notifications...');
     await loadNotifications();
   };
 
