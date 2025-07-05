@@ -282,6 +282,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     transferCode: string
   ) => {
     try {
+      console.log('Sending notification to:', recipientAddress);
+      console.log('From:', senderAddress);
+      console.log('Item:', itemName);
+      console.log('Transfer code:', transferCode);
+      
       const { error } = await supabase
         .from('notifications')
         .insert({
@@ -302,11 +307,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
 
       if (error) {
-        console.error('Error sending notification:', error);
+        console.error('Supabase error sending notification:', error);
         toast.error('Failed to send notification');
         return;
       }
 
+      console.log('Notification sent successfully');
       toast.success('Ownership transfer notification sent successfully!');
     } catch (error) {
       console.error('Error sending notification:', error);

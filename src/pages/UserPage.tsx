@@ -130,6 +130,12 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       return;
     }
 
+    // Validate recipient address format
+    if (!transferToAddress.startsWith('0x') || transferToAddress.length < 10) {
+      toast.error('Please enter a valid wallet address (must start with 0x)');
+      return;
+    }
+
     setLoading(true);
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
@@ -152,6 +158,12 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const item = userItems.find(item => item.item_id === transferItemId);
       const itemName = item?.name || transferItemId;
 
+      console.log('About to send notification:');
+      console.log('- Recipient:', transferToAddress);
+      console.log('- Item ID:', transferItemId);
+      console.log('- Item Name:', itemName);
+      console.log('- Sender:', address);
+      console.log('- Transfer Code:', transferCode);
       // Send notification to recipient via Supabase
       await sendOwnershipTransferNotification(
         transferToAddress,
