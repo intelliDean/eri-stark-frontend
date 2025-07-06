@@ -28,12 +28,21 @@ export const QRScanPage: React.FC = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
+    const pageParam = urlParams.get('page');
+    
+    console.log('QR Scan Page - URL params:', { dataParam, pageParam });
+    
     if (dataParam) {
       try {
         const decoded = decodeURIComponent(dataParam);
+        console.log('Decoded QR data:', decoded);
         setQrData(decoded);
         handleParseQRData(decoded);
+        
+        // Clear URL parameters after processing to clean up the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
       } catch (error) {
+        console.error('Error decoding QR data from URL:', error);
         toast.error('Invalid QR data in URL');
       }
     }
@@ -56,6 +65,7 @@ export const QRScanPage: React.FC = () => {
   };
 
   const handleQRScan = (data: string) => {
+    console.log('QR Scanner result:', data);
     setQrData(data);
     handleParseQRData(data);
     setShowScanner(false);

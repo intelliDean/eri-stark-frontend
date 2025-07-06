@@ -90,6 +90,29 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
 
         if (code) {
           console.log('QR Code detected:', code.data);
+          
+          // Check if the QR code contains a URL with our app's domain
+          if (code.data.includes(window.location.origin) && code.data.includes('page=qr-scan')) {
+            // Extract the data parameter from the URL
+            try {
+              const url = new URL(code.data);
+              const dataParam = url.searchParams.get('data');
+              if (dataParam) {
+                const decodedData = decodeURIComponent(dataParam);
+                console.log('Extracted data from URL:', decodedData);
+                setScanSuccess(true);
+                setTimeout(() => {
+                  onScan(decodedData);
+                  stopCamera();
+                }, 500);
+                return;
+              }
+            } catch (error) {
+              console.error('Error parsing QR URL:', error);
+            }
+          }
+          
+          // Fallback: treat as direct data
           setScanSuccess(true);
           setTimeout(() => {
             onScan(code.data);
@@ -131,6 +154,28 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
             
             if (code) {
               console.log('QR Code detected from image:', code.data);
+              
+              // Check if the QR code contains a URL with our app's domain
+              if (code.data.includes(window.location.origin) && code.data.includes('page=qr-scan')) {
+                // Extract the data parameter from the URL
+                try {
+                  const url = new URL(code.data);
+                  const dataParam = url.searchParams.get('data');
+                  if (dataParam) {
+                    const decodedData = decodeURIComponent(dataParam);
+                    console.log('Extracted data from URL:', decodedData);
+                    setScanSuccess(true);
+                    setTimeout(() => {
+                      onScan(decodedData);
+                    }, 500);
+                    return;
+                  }
+                } catch (error) {
+                  console.error('Error parsing QR URL:', error);
+                }
+              }
+              
+              // Fallback: treat as direct data
               setScanSuccess(true);
               setTimeout(() => {
                 onScan(code.data);

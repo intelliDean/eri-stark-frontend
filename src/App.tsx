@@ -25,8 +25,12 @@ function AppContent() {
     const page = urlParams.get('page');
     const data = urlParams.get('data');
     
+    console.log('App - URL params detected:', { page, data: data ? 'present' : 'not present' });
+    
     if (page === 'qr-scan' && data) {
+      console.log('Navigating to QR scan page with data');
       setCurrentPage('qr-scan');
+      setSidebarOpen(true); // Open sidebar for QR scan page
     }
   }, []);
 
