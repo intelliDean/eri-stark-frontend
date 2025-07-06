@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { getContract, OWNERSHIP_ADDRESS, AUTHENTICITY_ADDRESS, felt252ToString, ContractType } from '../utils/blockchain';
+import { getContract, OWNERSHIP_ADDRESS, AUTHENTICITY_ADDRESS, felt252ToString } from '../utils/blockchain';
+import { ContractType } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
