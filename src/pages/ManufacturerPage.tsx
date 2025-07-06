@@ -170,7 +170,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             }
 
             const qrData = JSON.stringify({
-                cert,
+                certificate: cert,
                 msgHash,
             });
 
