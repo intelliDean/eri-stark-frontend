@@ -265,35 +265,22 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.log('Preparing to send notification to sender (self)...');
       console.log('Sending revoke code notification directly to sender via Supabase...');
       
-      // Send notification directly to sender (User A) via Supabase
-      try {
-        const { error } = await supabase
-          .from('notifications')
-          .insert({
-            recipient_address: address, // Use original address, not normalized
-            sender_address: address,
-            type: 'transfer_code_generated',
-            title: 'Transfer Code Generated',
-            message: `You generated a transfer code for "${itemName}" to be sent to ${addressToValidate.slice(0, 6)}...${addressToValidate.slice(-4)}`,
-            data: {
-              itemId: transferItemId,
-              itemName,
-              toAddress: addressToValidate,
-              transferCode,
-              revokeUrl: '#revoke-code'
-            },
-            action_url: '#revoke-code',
-            action_label: 'Revoke Code'
-          });
-
-        if (error) {
-          console.error('Error sending revoke code notification:', error);
-        } else {
-          console.log('Revoke code notification sent successfully to sender');
-        }
-      } catch (error) {
-        console.error('Error sending revoke code notification:', error);
-      }
+      // Send notification to sender (User A) using the notification context
+      await addNotification({
+        type: 'transfer_code_generated',
+        title: 'Transfer Code Generated',
+        message: `You generated a transfer code for "${itemName}" to be sent to ${addressToValidate.slice(0, 6)}...${addressToValidate.slice(-4)}`,
+        data: {
+          itemId: transferItemId,
+          itemName,
+          toAddress: addressToValidate,
+          transferCode,
+          revokeUrl: '#revoke-code'
+        },
+        actionUrl: '#revoke-code',
+        actionLabel: 'Revoke Code'
+      });
+      console.log('Revoke code notification sent successfully to sender');
       
       toast.success(`Transfer code generated! Notifications sent to both parties.`);
       setTransferItemId('');
