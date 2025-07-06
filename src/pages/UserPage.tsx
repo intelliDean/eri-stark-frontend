@@ -21,6 +21,10 @@ interface UserPageProps {
 export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const { isDark } = useTheme();
   const { provider, account, address, isConnected, connectWallet } = useWallet();
+  const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
   console.log('=== USER PAGE COMPONENT RENDER ===');
   console.log('activeFeature:', activeFeature);
@@ -41,10 +45,9 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
     sendOwnershipTransferNotification: typeof sendOwnershipTransferNotification
   });
   
-  const [loading, setLoading] = useState(false);
   
   // Registration state
-  const [username, setUsername] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   
   // Dashboard state
   const [userItems, setUserItems] = useState<ItemDetails[]>([]);
@@ -56,6 +59,45 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   // Verification state
   const [verifyItemId, setVerifyItemId] = useState('');
   const [ownershipDetails, setOwnershipDetails] = useState<OwnershipDetails | null>(null);
+
+  // Load user profile when wallet connects
+  useEffect(() => {
+    if (isConnected && address) {
+      loadUserProfile();
+    } else {
+      setUserName('');
+      setIsRegistered(false);
+    }
+  }, [isConnected, address]);
+
+  const loadUserProfile = async () => {
+    if (!address || !provider) return;
+
+    setLoadingProfile(true);
+    try {
+      const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.VIEW, provider, account, address);
+      
+      const result = await contract.get_user(address);
+      console.log('User profile result:', result);
+      
+      if (result && result.username) {
+        const name = felt252ToString(result.username);
+        if (name && name.trim()) {
+          setUserName(name);
+          setIsRegistered(true);
+        } else {
+          setIsRegistered(false);
+        }
+      } else {
+        setIsRegistered(false);
+      }
+    } catch (error: unknown) {
+      console.log('User not registered yet or error loading profile:', error);
+      setIsRegistered(false);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   // Auto-fill revoke code from notification data
   useEffect(() => {
@@ -123,7 +165,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   const registerUser = async () => {
     if (!requireWalletConnection()) return;
 
-    if (!username.trim()) {
+    if (!newUsername.trim()) {
       toast.error('Please enter a username');
       return;
     }
@@ -134,7 +176,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
       console.log("Contract: ", contract);
       
-      const res = await contract.user_registers(stringToFelt252(username.toLowerCase().trim()));
+      const res = await contract.user_registers(stringToFelt252(newUsername.toLowerCase().trim()));
       console.log("Result: ", res);
       const txHash = res?.transaction_hash;
       const txResult = await provider!.waitForTransaction(txHash);
@@ -144,7 +186,10 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const userName = events[0]["eri::events::EriEvents::UserRegistered"].username;
 
       toast.success(`User ${felt252ToString(userName.toString())} registered successfully!`);
-      setUsername('');
+      setNewUsername('');
+      
+      // Reload profile to update the dashboard
+      loadUserProfile();
     } catch (error: unknown) {
       handleError(error, 'Registration failed');
     } finally {
@@ -559,8 +604,8 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
             >
               <Input
                 placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
                 required
               />
               <Button
@@ -849,92 +894,226 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       case 'my-items':
       default:
         return (
-          <Card>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className={`text-2xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  <Package className={`w-8 h-8 mr-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                  My Items ({userItems.length})
-                </h2>
-                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Your owned products are automatically loaded
-                </p>
-              </div>
-              <Button
-                onClick={loadUserItems}
-                loading={loading}
-                disabled={!isConnected}
-                variant="outline"
+          <div className="space-y-6">
+            {/* Welcome Message */}
+            {isConnected && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-4 rounded-xl border ${
+                  isRegistered
+                    ? isDark
+                      ? 'bg-green-500/10 border-green-500/30'
+                      : 'bg-green-50 border-green-200'
+                    : isDark
+                      ? 'bg-amber-500/10 border-amber-500/30'
+                      : 'bg-amber-50 border-amber-200'
+                }`}
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-
-            {!isConnected && (
-              <div className="mb-6">
-                <Card className={`border ${
-                  isDark 
-                    ? 'bg-amber-500/10 border-amber-500/30' 
-                    : 'bg-amber-50 border-amber-200'
-                }`}>
-                  <div className="flex items-center space-x-3">
-                    <AlertCircle className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <p className={isDark ? 'text-amber-300' : 'text-amber-700'}>
-                      Connect your wallet to view and manage your items
-                    </p>
-                    <Button onClick={connectWallet} size="sm" variant="outline">
-                      Connect Wallet
-                    </Button>
+                {loadingProfile ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className={isDark ? 'text-gray-300' : 'text-gray-600'}>
+                      Loading profile...
+                    </span>
                   </div>
-                </Card>
-              </div>
+                ) : isRegistered ? (
+                  <div className="text-center">
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                      Welcome back, {userName}! 👋
+                    </h3>
+                    <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                      Registered User • Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <h3 className={`text-lg font-semibold ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                      Welcome! 👋
+                    </h3>
+                    <p className={`text-sm mt-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                      Please register to access all user features and manage your products
+                    </p>
+                  </div>
+                )}
+              </motion.div>
             )}
 
-            {userItems.length > 0 ? (
-              <div className="grid gap-4 max-h-96 overflow-y-auto">
-                {userItems.map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`border rounded-xl p-4 transition-colors ${
-                      isDark 
-                        ? 'border-green-500/20 hover:border-green-500/40' 
-                        : 'border-green-600/20 hover:border-green-600/40'
+            {/* Quick Actions for Registered Users */}
+            {isConnected && isRegistered && (
+              <Card className="mb-6">
+                <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  Quick Actions
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => {/* Navigate to claim ownership */}}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                      isDark
+                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
                     }`}
                   >
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                          {item.name}
-                        </h3>
-                        <div className={`space-y-1 text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>ID:</span> {item.item_id}</p>
-                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Serial:</span> {item.serial}</p>
-                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Manufacturer:</span> {item.manufacturer}</p>
+                    <Package className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      Claim Product
+                    </h4>
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Claim ownership with transfer code
+                    </p>
+                  </button>
+                  
+                  <button
+                    onClick={() => {/* Navigate to transfer ownership */}}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                      isDark
+                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
+                    }`}
+                  >
+                    <Gift className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      Transfer Product
+                    </h4>
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Send product to another user
+                    </p>
+                  </button>
+                  
+                  <button
+                    onClick={() => {/* Navigate to verify ownership */}}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                      isDark
+                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
+                    }`}
+                  >
+                    <Shield className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      Verify Product
+                    </h4>
+                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Check product ownership
+                    </p>
+                  </button>
+                </div>
+              </Card>
+            )}
+
+            <Card>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className={`text-2xl font-bold flex items-center ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    <Package className={`w-8 h-8 mr-3 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    My Items ({userItems.length})
+                  </h2>
+                  <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Your owned products are automatically loaded
+                  </p>
+                </div>
+                <Button
+                  onClick={loadUserItems}
+                  loading={loading}
+                  disabled={!isConnected}
+                  variant="outline"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+
+              {!isConnected && (
+                <div className="mb-6">
+                  <Card className={`border ${
+                    isDark 
+                      ? 'bg-amber-500/10 border-amber-500/30' 
+                      : 'bg-amber-50 border-amber-200'
+                  }`}>
+                    <div className="flex items-center space-x-3">
+                      <AlertCircle className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                      <p className={isDark ? 'text-amber-300' : 'text-amber-700'}>
+                        Connect your wallet to view and manage your items
+                      </p>
+                      <Button onClick={connectWallet} size="sm" variant="outline">
+                        Connect Wallet
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              {/* Registration Prompt for Connected but Unregistered Users */}
+              {isConnected && !isRegistered && !loadingProfile && (
+                <div className="mb-6">
+                  <Card className={`border ${
+                    isDark
+                      ? 'bg-blue-500/10 border-blue-500/30'
+                      : 'bg-blue-50 border-blue-200'
+                  }`}>
+                    <div className="text-center">
+                      <User className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                      <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                        Complete Your Registration
+                      </h3>
+                      <p className={`mb-4 ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
+                        Register your account to start managing products and accessing all user features.
+                      </p>
+                      <Button 
+                        onClick={() => {/* Navigate to registration */}}
+                        variant="primary"
+                      >
+                        Register Now
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {userItems.length > 0 ? (
+                <div className="grid gap-4 max-h-96 overflow-y-auto">
+                  {userItems.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`border rounded-xl p-4 transition-colors ${
+                        isDark 
+                          ? 'border-green-500/20 hover:border-green-500/40' 
+                          : 'border-green-600/20 hover:border-green-600/40'
+                      }`}
+                    >
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                            {item.name}
+                          </h3>
+                          <div className={`space-y-1 text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>ID:</span> {item.item_id}</p>
+                            <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Serial:</span> {item.serial}</p>
+                            <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Manufacturer:</span> {item.manufacturer}</p>
+                          </div>
+                        </div>
+                        <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Production Date:</span> {item.date}</p>
+                          <p className="truncate" title={item.metadata_hash}>
+                            <span className={isDark ? 'text-green-400' : 'text-green-600'}>Metadata Hash:</span> {item.metadata_hash}
+                          </p>
                         </div>
                       </div>
-                      <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        <p><span className={isDark ? 'text-green-400' : 'text-green-600'}>Production Date:</span> {item.date}</p>
-                        <p className="truncate" title={item.metadata_hash}>
-                          <span className={isDark ? 'text-green-400' : 'text-green-600'}>Metadata Hash:</span> {item.metadata_hash}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Package className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                  {isConnected ? 'No items found.' : 'Connect your wallet to load your items.'}
-                </p>
-              </div>
-            )}
-          </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Package className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                  <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                    {isConnected ? 'No items found.' : 'Connect your wallet to load your items.'}
+                  </p>
+                </div>
+              )}
+            </Card>
+          </div>
         );
     }
   };

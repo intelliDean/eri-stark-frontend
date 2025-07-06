@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {motion} from 'framer-motion';
 import {Building2, Upload, FileText, Shield, Download, AlertCircle, Lightbulb, Eye} from 'lucide-react';
 import {toast} from 'react-toastify';
@@ -24,9 +25,12 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
     const {isDark} = useTheme();
     const {provider, account, address, isConnected, connectWallet} = useWallet();
     const [loading, setLoading] = useState(false);
+    const [manufacturerName, setManufacturerName] = useState('');
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [loadingProfile, setLoadingProfile] = useState(false);
 
     // Registration state
-    const [manufacturerName, setManufacturerName] = useState('');
+    const [newManufacturerName, setNewManufacturerName] = useState('');
 
     // Single certificate state
     const [certificate, setCertificate] = useState({
@@ -47,6 +51,45 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
     const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [certificateResults, setCertificateResults] = useState<CertificateResult[]>([]);
 
+    // Load manufacturer profile when wallet connects
+    useEffect(() => {
+        if (isConnected && address) {
+            loadManufacturerProfile();
+        } else {
+            setManufacturerName('');
+            setIsRegistered(false);
+        }
+    }, [isConnected, address]);
+
+    const loadManufacturerProfile = async () => {
+        if (!address || !provider) return;
+
+        setLoadingProfile(true);
+        try {
+            const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.VIEW, provider, account, address);
+            
+            const result = await contract.get_manufacturer(address);
+            console.log('Manufacturer profile result:', result);
+            
+            if (result && result.manufacturer_name) {
+                const name = felt252ToString(result.manufacturer_name);
+                if (name && name.trim()) {
+                    setManufacturerName(name);
+                    setIsRegistered(true);
+                } else {
+                    setIsRegistered(false);
+                }
+            } else {
+                setIsRegistered(false);
+            }
+        } catch (error: unknown) {
+            console.log('Manufacturer not registered yet or error loading profile:', error);
+            setIsRegistered(false);
+        } finally {
+            setLoadingProfile(false);
+        }
+    };
+
     const requireWalletConnection = () => {
         if (!isConnected) {
             toast.error('Please connect your wallet to continue');
@@ -59,7 +102,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
     const registerManufacturer = async () => {
         if (!requireWalletConnection()) return;
 
-        if (!manufacturerName.trim()) {
+        if (!newManufacturerName.trim()) {
             toast.error('Please enter manufacturer name');
             return;
         }
@@ -68,7 +111,7 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
         try {
             const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
 
-            const res = await contract.manufacturer_registers(stringToFelt252(manufacturerName));
+            const res = await contract.manufacturer_registers(stringToFelt252(newManufacturerName));
             const txHash = res?.transaction_hash;
             const txResult = await provider!.waitForTransaction(txHash);
             const events = contract.parseEvents(txResult);
@@ -77,7 +120,10 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
             const manuName = events[0]["eri::events::EriEvents::ManufacturerRegistered"].manufacturer_name;
 
             toast.success(`Manufacturer ${felt252ToString(manuName.toString())} registered successfully!`);
-            setManufacturerName('');
+            setNewManufacturerName('');
+            
+            // Reload profile to update the dashboard
+            loadManufacturerProfile();
         } catch (error: unknown) {
             handleError(error, 'Registration failed');
         } finally {
@@ -359,8 +405,8 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                         >
                             <Input
                                 placeholder="Enter manufacturer name"
-                                value={manufacturerName}
-                                onChange={(e) => setManufacturerName(e.target.value)}
+                                value={newManufacturerName}
+                                onChange={(e) => setNewManufacturerName(e.target.value)}
                                 required
                             />
                             <Button
@@ -686,7 +732,51 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                 return (
                     <div className="space-y-8">
                         {/* Header */}
-                        <div className="text-center">
+                        <div className="text-center mb-8">
+                            {/* Welcome Message */}
+                            {isConnected && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`mb-6 p-4 rounded-xl border ${
+                                        isRegistered
+                                            ? isDark
+                                                ? 'bg-green-500/10 border-green-500/30'
+                                                : 'bg-green-50 border-green-200'
+                                            : isDark
+                                                ? 'bg-amber-500/10 border-amber-500/30'
+                                                : 'bg-amber-50 border-amber-200'
+                                    }`}
+                                >
+                                    {loadingProfile ? (
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <span className={isDark ? 'text-gray-300' : 'text-gray-600'}>
+                                                Loading profile...
+                                            </span>
+                                        </div>
+                                    ) : isRegistered ? (
+                                        <div className="text-center">
+                                            <h3 className={`text-xl font-bold ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                                                Welcome back, {manufacturerName}! 👋
+                                            </h3>
+                                            <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                                                Verified Manufacturer • Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center">
+                                            <h3 className={`text-lg font-semibold ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                                                Welcome! 👋
+                                            </h3>
+                                            <p className={`text-sm mt-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                                Please register as a manufacturer to access all features
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                            
                             <Building2
                                 className={`w-16 h-16 mx-auto mb-6 ${isDark ? 'text-green-400' : 'text-green-600'}`}/>
                             <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -696,6 +786,67 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                 Create and manage product certificates with blockchain verification
                             </p>
                         </div>
+
+                        {/* Quick Actions for Registered Manufacturers */}
+                        {isConnected && isRegistered && (
+                            <Card className="mb-8">
+                                <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                    Quick Actions
+                                </h3>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <button
+                                        onClick={() => {/* Navigate to create certificate */}}
+                                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                                            isDark
+                                                ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                                                : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
+                                        }`}
+                                    >
+                                        <FileText className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                                        <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                            Create Certificate
+                                        </h4>
+                                        <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            Generate a new product certificate
+                                        </p>
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => {/* Navigate to bulk upload */}}
+                                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                                            isDark
+                                                ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                                                : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
+                                        }`}
+                                    >
+                                        <Upload className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                                        <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                            Bulk Upload
+                                        </h4>
+                                        <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            Process multiple certificates
+                                        </p>
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => {/* Navigate to verify authenticity */}}
+                                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
+                                            isDark
+                                                ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
+                                                : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
+                                        }`}
+                                    >
+                                        <Eye className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                                        <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                            Verify Product
+                                        </h4>
+                                        <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            Verify product authenticity
+                                        </p>
+                                    </button>
+                                </div>
+                            </Card>
+                        )}
 
                         {/* How It Works */}
                         <Card>
@@ -820,6 +971,31 @@ export const ManufacturerPage: React.FC<ManufacturerPageProps> = ({activeFeature
                                     </p>
                                     <Button onClick={connectWallet} size="sm" variant="outline">
                                         Connect Wallet
+                                    </Button>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Registration Prompt for Connected but Unregistered Users */}
+                        {isConnected && !isRegistered && !loadingProfile && (
+                            <Card className={`border ${
+                                isDark
+                                    ? 'bg-blue-500/10 border-blue-500/30'
+                                    : 'bg-blue-50 border-blue-200'
+                            }`}>
+                                <div className="text-center">
+                                    <Building2 className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                                    <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                        Complete Your Registration
+                                    </h3>
+                                    <p className={`mb-4 ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
+                                        Register your company to start creating verified certificates and accessing all manufacturer features.
+                                    </p>
+                                    <Button 
+                                        onClick={() => {/* Navigate to registration */}}
+                                        variant="primary"
+                                    >
+                                        Register Now
                                     </Button>
                                 </div>
                             </Card>
