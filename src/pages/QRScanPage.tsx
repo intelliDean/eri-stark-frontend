@@ -55,11 +55,34 @@ export const QRScanPage: React.FC = () => {
       return;
     }
 
+    console.log('Parsing QR data:', dataToUse);
+
     try {
-      const parsed = JSON.parse(dataToUse);
+      let parsed;
+      
+      // Check if the data is a URL first
+      if (dataToUse.startsWith('http') && dataToUse.includes('page=qr-scan')) {
+        console.log('Data appears to be a URL, extracting data parameter...');
+        const url = new URL(dataToUse);
+        const dataParam = url.searchParams.get('data');
+        if (dataParam) {
+          const decodedData = decodeURIComponent(dataParam);
+          console.log('Decoded data from URL:', decodedData);
+          parsed = JSON.parse(decodedData);
+        } else {
+          throw new Error('No data parameter found in URL');
+        }
+      } else {
+        // Try to parse as direct JSON data
+        console.log('Parsing as direct JSON data...');
+        parsed = JSON.parse(dataToUse);
+      }
+      
+      console.log('Parsed QR data structure:', parsed);
       setParsedData(parsed);
       toast.success('QR data parsed successfully');
     } catch (error) {
+      console.error('Error parsing QR data:', error);
       toast.error('Invalid QR data format');
     }
   };
@@ -78,7 +101,11 @@ export const QRScanPage: React.FC = () => {
       return;
     }
 
-    if (!parsedData?.cert) {
+    // Check for different possible data structures
+    const cert = parsedData?.cert || parsedData?.certificate;
+    const msgHash = parsedData?.msgHash;
+    
+    if (!cert) {
       toast.error('No certificate data found');
       return;
     }
@@ -87,9 +114,6 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.STATE_CHANGE, provider!, account, address);
       
-      const cert: Certificate = parsedData.cert;
-      const msgHash = parsedData.msgHash;
-
       const res = await contract.user_claim_ownership(cert, msgHash);
       const txHash = res?.transaction_hash;
       const txResult = await provider!.waitForTransaction(txHash);
@@ -115,7 +139,10 @@ export const QRScanPage: React.FC = () => {
   };
 
   const handleVerifyOwnership = async () => {
-    if (!parsedData?.cert) {
+    // Check for different possible data structures
+    const cert = parsedData?.cert || parsedData?.certificate;
+    
+    if (!cert) {
       toast.error('No certificate data found');
       return;
     }
@@ -124,7 +151,7 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.VIEW, provider!, account, address);
       
-      const result = await contract.verify_ownership(stringToFelt252(parsedData.cert.id));
+      const result = await contract.verify_ownership(stringToFelt252(cert.id));
 
       console.log("Result: ", result);
       
@@ -156,8 +183,19 @@ export const QRScanPage: React.FC = () => {
   };
 
   const handleVerifyAuthenticity = async () => {
-    if (!parsedData?.cert || !parsedData?.msgHash) {
-      toast.error('No certificate or signature data found');
+    console.log('Verify authenticity - parsed data:', parsedData);
+    
+    // Check for different possible data structures
+    const cert = parsedData?.cert || parsedData?.certificate;
+    const msgHash = parsedData?.msgHash;
+    
+    console.log('Certificate data:', cert);
+    console.log('Message hash:', msgHash);
+    
+    if (!cert || !msgHash) {
+      console.error('Missing certificate or signature data');
+      console.log('Available keys in parsedData:', Object.keys(parsedData || {}));
+      toast.error('No certificate or signature data found. Please check the QR code format.');
       return;
     }
 
@@ -165,19 +203,19 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.VIEW, provider!, account, address);
       
-      const result = await contract.verify_authenticity(parsedData.cert, parsedData.msgHash);
+      const result = await contract.verify_authenticity(cert, msgHash);
       
       setVerificationResult({
         type: 'authenticity',
         success: result,
         message: result ? 'Product is authentic' : 'Product authenticity could not be verified',
-        data: parsedData.cert
+        data: cert
       });
       
       if (result) {
         toast.success('Product authenticity verified');
         
-        let manufacturer = await contract.get_manufacturer(parsedData.cert.owner);
+        let manufacturer = await contract.get_manufacturer(cert.owner);
         setManufacturerName(felt252ToString(manufacturer.manufacturer_name));
         
       } else {
@@ -295,9 +333,9 @@ export const QRScanPage: React.FC = () => {
                   </span>
                 </div>
                 <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <p><strong>Product:</strong> {parsedData.cert?.name || 'Unknown'}</p>
-                  <p><strong>ID:</strong> {parsedData.cert?.id || 'Unknown'}</p>
-                  <p><strong>Serial:</strong> {parsedData.cert?.serial || 'Unknown'}</p>
+                  <p><strong>Product:</strong> {(parsedData.cert || parsedData.certificate)?.name || 'Unknown'}</p>
+                  <p><strong>ID:</strong> {(parsedData.cert || parsedData.certificate)?.id || 'Unknown'}</p>
+                  <p><strong>Serial:</strong> {(parsedData.cert || parsedData.certificate)?.serial || 'Unknown'}</p>
                 </div>
               </div>
             )}

@@ -99,7 +99,17 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
               const dataParam = url.searchParams.get('data');
               if (dataParam) {
                 const decodedData = decodeURIComponent(dataParam);
-                console.log('Extracted data from URL:', decodedData);
+                console.log('QR Scanner - Extracted data from URL:', decodedData);
+                console.log('QR Scanner - Data length:', decodedData.length);
+                
+                // Try to parse to validate
+                try {
+                  const testParse = JSON.parse(decodedData);
+                  console.log('QR Scanner - Parsed structure:', testParse);
+                } catch (parseError) {
+                  console.error('QR Scanner - Data is not valid JSON:', parseError);
+                }
+                
                 setScanSuccess(true);
                 setTimeout(() => {
                   onScan(decodedData);
@@ -163,7 +173,16 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
                   const dataParam = url.searchParams.get('data');
                   if (dataParam) {
                     const decodedData = decodeURIComponent(dataParam);
-                    console.log('Extracted data from URL:', decodedData);
+                    console.log('QR Scanner (file) - Extracted data from URL:', decodedData);
+                    
+                    // Try to parse to validate
+                    try {
+                      const testParse = JSON.parse(decodedData);
+                      console.log('QR Scanner (file) - Parsed structure:', testParse);
+                    } catch (parseError) {
+                      console.error('QR Scanner (file) - Data is not valid JSON:', parseError);
+                    }
+                    
                     setScanSuccess(true);
                     setTimeout(() => {
                       onScan(decodedData);
