@@ -61,23 +61,9 @@ export const QRScanPage: React.FC = () => {
     // Clear the URL parameters to avoid confusion
     window.history.replaceState({}, document.title, window.location.pathname);
     
+    // Always parse the scanned data directly and redirect to action selection
     setQrData(data);
-    // Try to extract the actual QR data from the URL if it's a scan URL
-    try {
-      const url = new URL(data);
-      const dataParam = url.searchParams.get('data');
-      if (dataParam) {
-        const decodedData = decodeURIComponent(dataParam);
-        setQrData(decodedData);
-        handleParseQRData(decodedData);
-      } else {
-        // If it's not a URL with data param, try to parse directly
-        handleParseQRData(data);
-      }
-    } catch {
-      // If it's not a valid URL, parse as direct JSON data
-      handleParseQRData(data);
-    }
+    handleParseQRData(data);
     setShowScanner(false);
   };
 
