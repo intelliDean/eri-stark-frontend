@@ -359,13 +359,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       // Normalize recipient address to ensure proper matching
       const normalizedRecipient = normalizeAddress(recipientAddress);
+      const normalizedSender = normalizeAddress(senderAddress);
       console.log('Normalized recipient address:', normalizedRecipient);
+      console.log('Normalized sender address:', normalizedSender);
 
       const { error } = await supabase
         .from('notifications')
         .insert({
           recipient_address: normalizedRecipient, // Use normalized address for consistency
-          sender_address: senderAddress,
+          sender_address: normalizedSender,
           type: 'ownership_transfer',
           title: 'New Ownership Transfer',
           message: `You have received ownership transfer for "${itemName}"`,
