@@ -922,7 +922,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                 ) : isRegistered ? (
                   <div className="text-center">
                     <h3 className={`text-xl font-bold ${isDark ? 'text-green-300' : 'text-green-700'}`}>
-                      Welcome back, {userName}! 👋
+                      Welcome back, {userName.toUpperCase()}! 👋
                     </h3>
                     <p className={`text-sm mt-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                       Registered User • Connected: {address?.slice(0, 6)}...{address?.slice(-4)}

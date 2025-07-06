@@ -211,12 +211,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <>
                       {currentPage === 'user' && userName && (
                         <div className={`text-sm font-medium ${isDark ? 'text-green-300' : 'text-green-400'}`}>
-                          👤 {userName}
+                          👤 {userName.toUpperCase()}
                         </div>
                       )}
                       {currentPage === 'manufacturer' && manufacturerName && (
                         <div className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-400'}`}>
-                          🏭 {manufacturerName}
+                          🏭 {manufacturerName.toUpperCase()}
                         </div>
                       )}
                       {currentPage === 'user' && !userName && (
