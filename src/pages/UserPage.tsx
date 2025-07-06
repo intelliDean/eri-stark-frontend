@@ -941,66 +941,6 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
               </motion.div>
             )}
 
-            {/* Quick Actions for Registered Users */}
-            {isConnected && isRegistered && (
-              <Card className="mb-6">
-                <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  Quick Actions
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <button
-                    onClick={() => {/* Navigate to claim ownership */}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
-                      isDark
-                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
-                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
-                    }`}
-                  >
-                    <Package className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                      Claim Product
-                    </h4>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      Claim ownership with transfer code
-                    </p>
-                  </button>
-                  
-                  <button
-                    onClick={() => {/* Navigate to transfer ownership */}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
-                      isDark
-                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
-                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
-                    }`}
-                  >
-                    <Gift className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                      Transfer Product
-                    </h4>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      Send product to another user
-                    </p>
-                  </button>
-                  
-                  <button
-                    onClick={() => {/* Navigate to verify ownership */}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left group ${
-                      isDark
-                        ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
-                        : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
-                    }`}
-                  >
-                    <Shield className={`w-6 h-6 mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                    <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                      Verify Product
-                    </h4>
-                    <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      Check product ownership
-                    </p>
-                  </button>
-                </div>
-              </Card>
-            )}
 
             <Card>
               <div className="flex items-center justify-between mb-6">
