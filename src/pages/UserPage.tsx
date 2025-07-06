@@ -141,15 +141,17 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
   useEffect(() => {
     // Load items for features that need them: my-items, transfer-ownership, or default dashboard
     const featuresNeedingItems = ['my-items', 'transfer-ownership', ''];
-    if (featuresNeedingItems.includes(activeFeature) && isConnected && userItems.length === 0) {
+    if (featuresNeedingItems.includes(activeFeature) && isConnected && isRegistered) {
       loadUserItems();
     }
-  }, [activeFeature, isConnected]);
+  }, [activeFeature, isConnected, isRegistered]);
 
   // Clear items when wallet is disconnected
   useEffect(() => {
     if (!isConnected) {
       setUserItems([]);
+      setUserName('');
+      setIsRegistered(false);
     }
   }, [isConnected]);
 
