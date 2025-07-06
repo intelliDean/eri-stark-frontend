@@ -20,6 +20,7 @@ export const QRScanPage: React.FC = () => {
   const [qrData, setQrData] = useState('');
   const [parsedData, setParsedData] = useState<any>(null);
   const [selectedAction, setSelectedAction] = useState<'claim' | 'verify-ownership' | 'verify-authenticity' | null>(null);
+  const [showActionSelection, setShowActionSelection] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [manufacturerName, setManufacturerName] = useState('');
@@ -50,6 +51,8 @@ export const QRScanPage: React.FC = () => {
       const parsed = JSON.parse(dataToUse);
       setParsedData(parsed);
       setVerificationResult(null); // Clear previous results
+      setSelectedAction(null); // Clear previous action selection
+      setShowActionSelection(true); // Show action selection after successful parse
       toast.success('QR data parsed successfully');
     } catch (error) {
       toast.error('Invalid QR data format. Please ensure the QR code contains valid certificate data.');
@@ -262,50 +265,77 @@ export const QRScanPage: React.FC = () => {
               QR Code Scanner
             </h1>
             <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Scan or paste QR code data to verify products and manage ownership
+              {!showActionSelection 
+                ? 'Scan or paste QR code data to get started'
+                : 'Choose what you want to do with this product'
+              }
             </p>
           </div>
 
-          {/* QR Data Input */}
-          <Card className="mb-8">
-            <div className="mb-6">
-              <QrCode className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                Enter QR Code Data
-              </h2>
-              <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Scan a QR code with your camera or paste the data manually
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => setShowScanner(true)}
-                  variant="primary"
-                  className="flex-1"
-                >
-                  <Camera className="w-4 h-4 mr-2" />
+          {/* QR Data Input - Only show if no action selection is active */}
+          {!showActionSelection && (
+            <Card className="mb-8">
+              <div className="mb-6">
+                <QrCode className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Scan QR Code
-                </Button>
+                </h2>
+                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Scan a QR code with your camera or paste the data manually
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => setShowScanner(true)}
+                    variant="primary"
+                    className="flex-1"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Scan QR Code
+                  </Button>
+                  <Button
+                    onClick={() => handleParseQRData()}
+                    variant="outline"
+                    disabled={!qrData.trim()}
+                  >
+                    Parse Data
+                  </Button>
+                </div>
+                
+                <Input
+                  placeholder="Or paste QR code data here..."
+                  value={qrData}
+                  onChange={(e) => setQrData(e.target.value)}
+                />
+              </div>
+            </Card>
+          )}
+
+          {/* Product Information Card - Show when QR is parsed */}
+          {showActionSelection && parsedData && (
+            <Card className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  Product Information
+                </h3>
                 <Button
-                  onClick={() => handleParseQRData()}
-                  variant="outline"
-                  disabled={!qrData.trim()}
+                  onClick={() => {
+                    setShowActionSelection(false);
+                    setParsedData(null);
+                    setQrData('');
+                    setVerificationResult(null);
+                    setSelectedAction(null);
+                  }}
+                  variant="ghost"
+                  size="sm"
                 >
-                  Parse Data
+                  Scan New QR
                 </Button>
               </div>
               
-              <Input
-                placeholder="Or paste QR code data here..."
-                value={qrData}
-                onChange={(e) => setQrData(e.target.value)}
-              />
-            </div>
-
-            {parsedData && (
-              <div className={`mt-6 p-4 rounded-xl border ${
+              <div className={`p-4 rounded-xl border ${
                 isDark 
                   ? 'bg-green-500/10 border-green-500/30' 
                   : 'bg-green-50 border-green-200'
@@ -313,24 +343,37 @@ export const QRScanPage: React.FC = () => {
                 <div className="flex items-center space-x-2 mb-3">
                   <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                   <span className={`font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
-                    QR Data Parsed Successfully
+                    QR Code Scanned Successfully
                   </span>
                 </div>
-                <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <p><strong>Product:</strong> {parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
-                  <p><strong>ID:</strong> {parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
-                  <p><strong>Serial:</strong> {parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
+                <div className={`grid md:grid-cols-3 gap-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <div>
+                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product Name</p>
+                    <p>{parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product ID</p>
+                    <p>{parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Serial Number</p>
+                    <p>{parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
+                  </div>
                 </div>
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
 
           {/* Action Selection */}
-          {parsedData && (
+          {showActionSelection && parsedData && (
             <Card className="mb-8">
               <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                Choose an Action
+                What would you like to do?
               </h3>
+              
+              <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                Select one of the actions below to interact with this product:
+              </p>
               
               <div className="grid md:grid-cols-3 gap-4">
                 {actions.map((action) => {
@@ -342,7 +385,7 @@ export const QRScanPage: React.FC = () => {
                       key={action.id}
                       onClick={() => setSelectedAction(action.id as any)}
                       className={`
-                        p-4 rounded-xl border-2 transition-all duration-300 text-left
+                        p-6 rounded-xl border-2 transition-all duration-300 text-left hover:scale-105
                         ${isSelected 
                           ? isDark
                             ? 'border-green-500 bg-green-500/10' 
@@ -353,12 +396,12 @@ export const QRScanPage: React.FC = () => {
                         }
                       `}
                     >
-                      <Icon className={`w-6 h-6 mb-3 ${
+                      <Icon className={`w-8 h-8 mb-4 ${
                         isSelected 
                           ? isDark ? 'text-green-400' : 'text-green-600'
                           : isDark ? 'text-gray-400' : 'text-gray-500'
                       }`} />
-                      <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      <h4 className={`font-bold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                         {action.title}
                       </h4>
                       <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -370,13 +413,20 @@ export const QRScanPage: React.FC = () => {
                           Wallet connection required
                         </div>
                       )}
+                      {isSelected && (
+                        <div className={`mt-3 text-xs font-medium ${
+                          isDark ? 'text-green-400' : 'text-green-600'
+                        }`}>
+                          ✓ Selected - Click "Execute Action" below
+                        </div>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
               {selectedAction && (
-                <div className="mt-6">
+                <div className="mt-8">
                   <Button
                     onClick={() => {
                       const action = actions.find(a => a.id === selectedAction);
@@ -390,15 +440,33 @@ export const QRScanPage: React.FC = () => {
                     }}
                     loading={loading}
                     className="w-full"
+                    size="lg"
                   >
                     {(() => {
                       const action = actions.find(a => a.id === selectedAction);
                       if (action?.requiresWallet && !isConnected) {
                         return 'Connect Wallet to Continue';
                       }
-                      return action?.title || 'Execute Action';
+                      return `Execute: ${action?.title}` || 'Execute Action';
                     })()}
                   </Button>
+                  
+                  <div className={`mt-4 p-3 rounded-lg text-xs ${
+                    isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                    💡 <strong>Tip:</strong> {(() => {
+                      switch (selectedAction) {
+                        case 'claim':
+                          return 'This will transfer ownership of the product to your wallet address.';
+                        case 'verify-ownership':
+                          return 'This will show you who currently owns this product.';
+                        case 'verify-authenticity':
+                          return 'This will verify if the product is authentic and show manufacturer details.';
+                        default:
+                          return 'Select an action above to see more information.';
+                      }
+                    })()}
+                  </div>
                 </div>
               )}
             </Card>
@@ -406,7 +474,7 @@ export const QRScanPage: React.FC = () => {
 
           {/* Verification Results */}
           {verificationResult && (
-            <Card>
+            <Card className="mb-8">
               <div className="flex items-center space-x-3 mb-4">
                 {verificationResult.success ? (
                   <CheckCircle className={`w-6 h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
@@ -414,7 +482,9 @@ export const QRScanPage: React.FC = () => {
                   <AlertCircle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
                 )}
                 <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  Verification Results
+                  {verificationResult.type === 'claim' ? 'Ownership Claim Result' : 
+                   verificationResult.type === 'ownership' ? 'Ownership Verification Result' :
+                   'Authenticity Verification Result'}
                 </h3>
               </div>
 
@@ -457,6 +527,20 @@ export const QRScanPage: React.FC = () => {
                     )}
                   </div>
                 )}
+              </div>
+              
+              {/* Action buttons after results */}
+              <div className="mt-6 flex gap-4">
+                <Button
+                  onClick={() => {
+                    setShowActionSelection(true);
+                    setVerificationResult(null);
+                    setSelectedAction(null);
+                  }}
+                  variant="outline"
+                >
+                  Try Another Action
+                </Button>
               </div>
             </Card>
           )}
