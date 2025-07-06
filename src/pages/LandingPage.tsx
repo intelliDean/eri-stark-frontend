@@ -59,7 +59,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPageChange }) => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Powered by Starknet
+              Powered by Blockchain
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
