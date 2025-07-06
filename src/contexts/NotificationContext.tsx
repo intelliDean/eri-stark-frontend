@@ -92,7 +92,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .or(`recipient_address.eq.${normalizedAddress},recipient_address.eq.${address}`)
+        .eq('recipient_address', normalizedAddress)
         .order('created_at', { ascending: false });
 
       if (error) {
