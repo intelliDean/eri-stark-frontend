@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { QrCode, Package, Shield, Eye, AlertCircle, CheckCircle, Camera } from 'lucide-react';
+import { QrCode, Package, Shield, Eye, AlertCircle, CheckCircle, Camera, Copy, Share } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -23,6 +23,7 @@ export const QRScanPage: React.FC = () => {
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [manufacturerName, setManufacturerName] = useState('');
+  const [preserveUrl, setPreserveUrl] = useState(false);
 
   // Parse QR data on component mount if URL contains data
   useEffect(() => {
@@ -39,8 +40,12 @@ export const QRScanPage: React.FC = () => {
         setQrData(decoded);
         handleParseQRData(decoded);
         
-        // Clear URL parameters after processing to clean up the URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Only clear URL if not preserving for sharing
+        if (!preserveUrl) {
+          setTimeout(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }, 1000); // Give time for the page to load
+        }
       } catch (error) {
         console.error('Error decoding QR data from URL:', error);
         toast.error('Invalid QR data in URL');
@@ -233,6 +238,23 @@ export const QRScanPage: React.FC = () => {
     }
   };
 
+  const copyCurrentUrl = () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl);
+    toast.success('URL copied to clipboard!');
+  };
+
+  const generateShareableUrl = () => {
+    if (!qrData) {
+      toast.error('No QR data to share');
+      return;
+    }
+    
+    const shareableUrl = `${window.location.origin}?page=qr-scan&data=${encodeURIComponent(qrData)}`;
+    navigator.clipboard.writeText(shareableUrl);
+    toast.success('Shareable URL copied to clipboard!');
+  };
+
   const actions = [
     {
       id: 'claim',
@@ -337,10 +359,61 @@ export const QRScanPage: React.FC = () => {
                   <p><strong>ID:</strong> {(parsedData.cert || parsedData.certificate)?.id || 'Unknown'}</p>
                   <p><strong>Serial:</strong> {(parsedData.cert || parsedData.certificate)?.serial || 'Unknown'}</p>
                 </div>
+                
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={copyCurrentUrl}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Current URL
+                  </Button>
+                  <Button
+                    onClick={generateShareableUrl}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Share className="w-4 h-4 mr-2" />
+                    Generate Share Link
+                  </Button>
+                </div>
               </div>
             )}
           </Card>
 
+          {/* URL Sharing Options */}
+          {parsedData && (
+            <Card className="mb-8">
+              <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                Share This Verification
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="preserve-url"
+                    checked={preserveUrl}
+                    onChange={(e) => setPreserveUrl(e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="preserve-url" className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    Keep URL parameters for sharing
+                  </label>
+                </div>
+                
+                {preserveUrl && (
+                  <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10' : 'bg-green-50'}`}>
+                    <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                      ✅ URL will remain shareable. You can copy and share this link with others.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
           {/* Action Selection */}
           {parsedData && (
             <Card className="mb-8">
