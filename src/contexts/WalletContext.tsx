@@ -53,7 +53,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connectWallet = async (): Promise<void> => {
     try {
       const { wallet } = await connect({
-        provider: PROVIDER
+        provider: PROVIDER,
+        modalMode: 'neverAsk'
       });
       
       if (wallet && wallet.isConnected) {
