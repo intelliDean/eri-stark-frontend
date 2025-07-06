@@ -49,15 +49,31 @@ export const QRScanPage: React.FC = () => {
     try {
       const parsed = JSON.parse(dataToUse);
       setParsedData(parsed);
+      setVerificationResult(null); // Clear previous results
       toast.success('QR data parsed successfully');
     } catch (error) {
-      toast.error('Invalid QR data format');
+      toast.error('Invalid QR data format. Please ensure the QR code contains valid certificate data.');
     }
   };
 
   const handleQRScan = (data: string) => {
     setQrData(data);
-    handleParseQRData(data);
+    // Try to extract the actual QR data from the URL if it's a scan URL
+    try {
+      const url = new URL(data);
+      const dataParam = url.searchParams.get('data');
+      if (dataParam) {
+        const decodedData = decodeURIComponent(dataParam);
+        setQrData(decodedData);
+        handleParseQRData(decodedData);
+      } else {
+        // If it's not a URL with data param, try to parse directly
+        handleParseQRData(data);
+      }
+    } catch {
+      // If it's not a valid URL, parse as direct JSON data
+      handleParseQRData(data);
+    }
     setShowScanner(false);
   };
 
@@ -79,6 +95,10 @@ export const QRScanPage: React.FC = () => {
       
       const cert: Certificate = parsedData.cert;
       const msgHash = parsedData.msgHash;
+
+      if (!cert || !msgHash) {
+        throw new Error('Invalid certificate data - missing certificate or message hash');
+      }
 
       const res = await contract.user_claim_ownership(cert, msgHash);
       const txHash = res?.transaction_hash;
@@ -114,7 +134,12 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.VIEW, provider!, account, address);
       
-      const result = await contract.verify_ownership(stringToFelt252(parsedData.cert.id));
+      const itemId = parsedData.cert?.id || parsedData.cert?.unique_id;
+      if (!itemId) {
+        throw new Error('No item ID found in certificate data');
+      }
+
+      const result = await contract.verify_ownership(stringToFelt252(itemId));
 
       console.log("Result: ", result);
       
@@ -155,7 +180,14 @@ export const QRScanPage: React.FC = () => {
     try {
       const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.VIEW, provider!, account, address);
       
-      const result = await contract.verify_authenticity(parsedData.cert, parsedData.msgHash);
+      const cert = parsedData.cert || parsedData.certificate;
+      const msgHash = parsedData.msgHash;
+
+      if (!cert || !msgHash) {
+        throw new Error('Invalid certificate data - missing certificate or message hash');
+      }
+
+      const result = await contract.verify_authenticity(cert, msgHash);
       
       setVerificationResult({
         type: 'authenticity',
@@ -167,7 +199,7 @@ export const QRScanPage: React.FC = () => {
       if (result) {
         toast.success('Product authenticity verified');
         
-        let manufacturer = await contract.get_manufacturer(parsedData.cert.owner);
+        let manufacturer = await contract.get_manufacturer(cert.owner);
         setManufacturerName(felt252ToString(manufacturer.manufacturer_name));
         
       } else {
@@ -307,9 +339,12 @@ export const QRScanPage: React.FC = () => {
                   
                   return (
                     <button
-                      key={action.id}
-                      onClick={() => setSelectedAction(action.id as any)}
-                      className={`
+                <p><strong>Product:</strong> {parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
+                <p><strong>ID:</strong> {parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
+                <p><strong>Serial:</strong> {parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
+                {parsedData.msgHash && (
+                  <p><strong>Signature:</strong> {parsedData.msgHash.slice(0, 10)}...{parsedData.msgHash.slice(-6)}</p>
+                )}
                         p-4 rounded-xl border-2 transition-all duration-300 text-left
                         ${isSelected 
                           ? isDark
@@ -334,10 +369,14 @@ export const QRScanPage: React.FC = () => {
                       </p>
                       {action.requiresWallet && !isConnected && (
                         <div className={`flex items-center mt-2 text-xs ${
-                          isDark ? 'text-amber-400' : 'text-amber-600'
+                          <p><strong>Product ID:</strong> {verificationResult.data.id || verificationResult.data.unique_id}</p>
                         }`}>
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          Requires wallet connection
+                          {verificationResult.data.date && (
+                            <p><strong>Manufacturing Date:</strong> {new Date(parseInt(verificationResult.data.date) * 1000).toLocaleDateString()}</p>
+                          )}
+                          {manufacturerName && (
+                            <p><strong>Manufacturer:</strong> {manufacturerName}</p>
+                          )}
                         </div>
                       )}
                     </button>

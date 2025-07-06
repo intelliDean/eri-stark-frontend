@@ -23,7 +23,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
   };
 
   // Create QR scan URL that works with the current routing system
-  const qrScanUrl = `${window.location.origin}?page=qr-scan&data=${encodeURIComponent(data)}`;
+  const qrScanUrl = `${window.location.origin}${window.location.pathname}?page=qr-scan&data=${encodeURIComponent(data)}`;
 
   return (
     <Card className="text-center">
@@ -41,7 +41,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
         
         <div className="relative inline-block p-4 bg-white rounded-xl shadow-inner">
           <QRCodeCanvas
-            value={qrScanUrl}
+            value={data}
             size={300}
             fgColor="#059669"
             bgColor="#ffffff"
@@ -66,7 +66,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ data, label, itemI
           </Button>
           
           <p className="text-xs text-gray-400">
-            QR code contains verification URL for easy scanning
+            QR code contains certificate data for verification
           </p>
         </div>
       </motion.div>

@@ -80,7 +80,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
     if (!context) return;
 
     const scan = () => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning) {
+      if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning && !scanSuccess) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -89,6 +89,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
         const code = jsQR(imageData.data, imageData.width, imageData.height);
 
         if (code) {
+          console.log('QR Code detected:', code.data);
           setScanSuccess(true);
           setTimeout(() => {
             onScan(code.data);
@@ -98,7 +99,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
         }
       }
 
-      if (isScanning) {
+      if (isScanning && !scanSuccess) {
         requestAnimationFrame(scan);
       }
     };
@@ -129,6 +130,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             
             if (code) {
+              console.log('QR Code detected from image:', code.data);
               setScanSuccess(true);
               setTimeout(() => {
                 onScan(code.data);
