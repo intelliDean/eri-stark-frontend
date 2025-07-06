@@ -1065,8 +1065,8 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                         Register Now
                       </Button>
                     </div>
-                  </div>
                 </Card>
+                  </div>
               )}
 
               {userItems.length > 0 ? (
