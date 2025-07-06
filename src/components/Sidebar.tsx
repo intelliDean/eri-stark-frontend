@@ -1,4 +1,5 @@
 import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, 
@@ -18,6 +19,9 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { useWallet } from '../contexts/WalletContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { getContract, OWNERSHIP_ADDRESS, AUTHENTICITY_ADDRESS, felt252ToString, ContractType } from '../utils/blockchain';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -38,6 +42,69 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeFeature, 
   onFeatureChange 
 }) => {
+  const { isDark } = useTheme();
+  const { provider, account, address, isConnected } = useWallet();
+  const [userName, setUserName] = useState('');
+  const [manufacturerName, setManufacturerName] = useState('');
+  const [loadingName, setLoadingName] = useState(false);
+
+  // Load user/manufacturer name when wallet connects and page changes
+  useEffect(() => {
+    if (isConnected && address) {
+      if (currentPage === 'user') {
+        loadUserName();
+      } else if (currentPage === 'manufacturer') {
+        loadManufacturerName();
+      }
+    } else {
+      setUserName('');
+      setManufacturerName('');
+    }
+  }, [isConnected, address, currentPage]);
+
+  const loadUserName = async () => {
+    if (!address || !provider) return;
+
+    setLoadingName(true);
+    try {
+      const contract = await getContract(OWNERSHIP_ADDRESS, ContractType.VIEW, provider, account, address);
+      const result = await contract.get_user(address);
+      
+      if (result && result.username) {
+        const name = felt252ToString(result.username);
+        if (name && name.trim()) {
+          setUserName(name);
+        }
+      }
+    } catch (error) {
+      console.log('User not registered or error loading name:', error);
+      setUserName('');
+    } finally {
+      setLoadingName(false);
+    }
+  };
+
+  const loadManufacturerName = async () => {
+    if (!address || !provider) return;
+
+    setLoadingName(true);
+    try {
+      const contract = await getContract(AUTHENTICITY_ADDRESS, ContractType.VIEW, provider, account, address);
+      const result = await contract.get_manufacturer(address);
+      
+      if (result && result.manufacturer_name) {
+        const name = felt252ToString(result.manufacturer_name);
+        if (name && name.trim()) {
+          setManufacturerName(name);
+        }
+      }
+    } catch (error) {
+      console.log('Manufacturer not registered or error loading name:', error);
+      setManufacturerName('');
+    } finally {
+      setLoadingName(false);
+    }
+  };
 
   const manufacturerFeatures = [
     { id: 'landing', label: 'Back to Home', icon: Home },
@@ -130,7 +197,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4">
           {/* Header with close/toggle buttons */}
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold text-green-400">{getPageTitle()}</h2>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-green-400">{getPageTitle()}</h2>
+              {/* User/Manufacturer Name */}
+              {isConnected && (
+                <div className="mt-2">
+                  {loadingName ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-xs text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {currentPage === 'user' && userName && (
+                        <div className={`text-sm font-medium ${isDark ? 'text-green-300' : 'text-green-400'}`}>
+                          👤 {userName}
+                        </div>
+                      )}
+                      {currentPage === 'manufacturer' && manufacturerName && (
+                        <div className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-400'}`}>
+                          🏭 {manufacturerName}
+                        </div>
+                      )}
+                      {currentPage === 'user' && !userName && (
+                        <div className="text-xs text-gray-500">
+                          Not registered
+                        </div>
+                      )}
+                      {currentPage === 'manufacturer' && !manufacturerName && (
+                        <div className="text-xs text-gray-500">
+                          Not registered
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+              {!isConnected && (currentPage === 'user' || currentPage === 'manufacturer') && (
+                <div className="text-xs text-gray-500 mt-2">
+                  Connect wallet to see name
+                </div>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               {/* Hide button for desktop */}
               <button
