@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { QrCode, Package, Shield, Eye, AlertCircle, CheckCircle, Camera } from 'lucide-react';
+import { QrCode, Package, Shield, Eye, AlertCircle, CheckCircle, Camera, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -20,7 +20,6 @@ export const QRScanPage: React.FC = () => {
   const [qrData, setQrData] = useState('');
   const [parsedData, setParsedData] = useState<any>(null);
   const [selectedAction, setSelectedAction] = useState<'claim' | 'verify-ownership' | 'verify-authenticity' | null>(null);
-  const [showActionSelection, setShowActionSelection] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [manufacturerName, setManufacturerName] = useState('');
@@ -52,14 +51,16 @@ export const QRScanPage: React.FC = () => {
       setParsedData(parsed);
       setVerificationResult(null); // Clear previous results
       setSelectedAction(null); // Clear previous action selection
-      setShowActionSelection(true); // Show action selection after successful parse
-      toast.success('QR data parsed successfully');
+      toast.success('QR code scanned successfully! Choose an action below.');
     } catch (error) {
       toast.error('Invalid QR data format. Please ensure the QR code contains valid certificate data.');
     }
   };
 
   const handleQRScan = (data: string) => {
+    // Clear the URL parameters to avoid confusion
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
     setQrData(data);
     // Try to extract the actual QR data from the URL if it's a scan URL
     try {
@@ -247,6 +248,14 @@ export const QRScanPage: React.FC = () => {
     }
   ];
 
+  const resetScanner = () => {
+    setParsedData(null);
+    setQrData('');
+    setVerificationResult(null);
+    setSelectedAction(null);
+    setManufacturerName('');
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
@@ -265,15 +274,17 @@ export const QRScanPage: React.FC = () => {
               QR Code Scanner
             </h1>
             <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              {!showActionSelection 
+              {!parsedData 
                 ? 'Scan or paste QR code data to get started'
-                : 'Choose what you want to do with this product'
+                : verificationResult
+                  ? 'Action completed! Scan another QR code or try a different action.'
+                  : 'Choose what you want to do with this product'
               }
             </p>
           </div>
 
-          {/* QR Data Input - Only show if no action selection is active */}
-          {!showActionSelection && (
+          {/* QR Data Input - Only show if no data is parsed */}
+          {!parsedData && (
             <Card className="mb-8">
               <div className="mb-6">
                 <QrCode className={`w-8 h-8 mb-4 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
@@ -310,166 +321,183 @@ export const QRScanPage: React.FC = () => {
                   onChange={(e) => setQrData(e.target.value)}
                 />
               </div>
-            </Card>
-          )}
 
-          {/* Product Information Card - Show when QR is parsed */}
-          {showActionSelection && parsedData && (
-            <Card className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  Product Information
-                </h3>
-                <Button
-                  onClick={() => {
-                    setShowActionSelection(false);
-                    setParsedData(null);
-                    setQrData('');
-                    setVerificationResult(null);
-                    setSelectedAction(null);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                >
-                  Scan New QR
-                </Button>
-              </div>
-              
-              <div className={`p-4 rounded-xl border ${
+              <div className={`mt-6 p-4 rounded-xl border ${
                 isDark 
-                  ? 'bg-green-500/10 border-green-500/30' 
-                  : 'bg-green-50 border-green-200'
+                  ? 'bg-blue-500/10 border-blue-500/30' 
+                  : 'bg-blue-50 border-blue-200'
               }`}>
-                <div className="flex items-center space-x-2 mb-3">
-                  <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-                  <span className={`font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
-                    QR Code Scanned Successfully
-                  </span>
-                </div>
-                <div className={`grid md:grid-cols-3 gap-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <div>
-                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product Name</p>
-                    <p>{parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
-                  </div>
-                  <div>
-                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product ID</p>
-                    <p>{parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
-                  </div>
-                  <div>
-                    <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Serial Number</p>
-                    <p>{parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
-                  </div>
-                </div>
+                <p className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                  💡 <strong>How it works:</strong> Scan a product's QR code to access verification options. You can claim ownership, verify current ownership, or check product authenticity.
+                </p>
               </div>
             </Card>
           )}
 
-          {/* Action Selection */}
-          {showActionSelection && parsedData && (
-            <Card className="mb-8">
-              <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                What would you like to do?
-              </h3>
-              
-              <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Select one of the actions below to interact with this product:
-              </p>
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                {actions.map((action) => {
-                  const Icon = action.icon;
-                  const isSelected = selectedAction === action.id;
-                  
-                  return (
-                    <button
-                      key={action.id}
-                      onClick={() => setSelectedAction(action.id as any)}
-                      className={`
-                        p-6 rounded-xl border-2 transition-all duration-300 text-left hover:scale-105
-                        ${isSelected 
-                          ? isDark
-                            ? 'border-green-500 bg-green-500/10' 
-                            : 'border-green-600 bg-green-600/10'
-                          : isDark
-                            ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5'
-                            : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5'
-                        }
-                      `}
-                    >
-                      <Icon className={`w-8 h-8 mb-4 ${
-                        isSelected 
-                          ? isDark ? 'text-green-400' : 'text-green-600'
-                          : isDark ? 'text-gray-400' : 'text-gray-500'
-                      }`} />
-                      <h4 className={`font-bold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                        {action.title}
-                      </h4>
-                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {action.description}
-                      </p>
-                      {action.requiresWallet && !isConnected && (
-                        <div className={`flex items-center mt-2 text-xs ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                          <AlertCircle className="w-4 h-4 mr-1" />
-                          Wallet connection required
-                        </div>
-                      )}
-                      {isSelected && (
-                        <div className={`mt-3 text-xs font-medium ${
-                          isDark ? 'text-green-400' : 'text-green-600'
-                        }`}>
-                          ✓ Selected - Click "Execute Action" below
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {selectedAction && (
-                <div className="mt-8">
+          {/* Product Information & Action Selection - Show when QR is parsed but no result yet */}
+          {parsedData && !verificationResult && (
+            <>
+              {/* Product Information Card */}
+              <Card className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    Product Information
+                  </h3>
                   <Button
-                    onClick={() => {
-                      const action = actions.find(a => a.id === selectedAction);
-                      if (action) {
-                        if (action.requiresWallet && !isConnected) {
-                          connectWallet();
-                        } else {
-                          action.action();
-                        }
-                      }
-                    }}
-                    loading={loading}
-                    className="w-full"
-                    size="lg"
+                    onClick={resetScanner}
+                    variant="ghost"
+                    size="sm"
                   >
-                    {(() => {
-                      const action = actions.find(a => a.id === selectedAction);
-                      if (action?.requiresWallet && !isConnected) {
-                        return 'Connect Wallet to Continue';
-                      }
-                      return `Execute: ${action?.title}` || 'Execute Action';
-                    })()}
+                    Scan New QR
                   </Button>
-                  
-                  <div className={`mt-4 p-3 rounded-lg text-xs ${
-                    isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
-                  }`}>
-                    💡 <strong>Tip:</strong> {(() => {
-                      switch (selectedAction) {
-                        case 'claim':
-                          return 'This will transfer ownership of the product to your wallet address.';
-                        case 'verify-ownership':
-                          return 'This will show you who currently owns this product.';
-                        case 'verify-authenticity':
-                          return 'This will verify if the product is authentic and show manufacturer details.';
-                        default:
-                          return 'Select an action above to see more information.';
-                      }
-                    })()}
+                </div>
+                
+                <div className={`p-4 rounded-xl border ${
+                  isDark 
+                    ? 'bg-green-500/10 border-green-500/30' 
+                    : 'bg-green-50 border-green-200'
+                }`}>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <CheckCircle className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                    <span className={`font-medium ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                      QR Code Scanned Successfully
+                    </span>
+                  </div>
+                  <div className={`grid md:grid-cols-3 gap-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <div>
+                      <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product Name</p>
+                      <p>{parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Product ID</p>
+                      <p>{parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className={`font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>Serial Number</p>
+                      <p>{parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
+                    </div>
                   </div>
                 </div>
-              )}
-            </Card>
+              </Card>
+
+              {/* Action Selection */}
+              <Card className="mb-8">
+                <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  What would you like to do?
+                </h3>
+                
+                <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Select one of the actions below to interact with this product:
+                </p>
+                
+                <div className="grid md:grid-cols-3 gap-6">
+                  {actions.map((action) => {
+                    const Icon = action.icon;
+                    const isSelected = selectedAction === action.id;
+                    
+                    return (
+                      <motion.button
+                        key={action.id}
+                        onClick={() => setSelectedAction(action.id as any)}
+                        className={`
+                          p-6 rounded-xl border-2 transition-all duration-300 text-left
+                          ${isSelected 
+                            ? isDark
+                              ? 'border-green-500 bg-green-500/10 scale-105' 
+                              : 'border-green-600 bg-green-600/10 scale-105'
+                            : isDark
+                              ? 'border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5 hover:scale-102'
+                              : 'border-green-600/20 hover:border-green-600/40 hover:bg-green-600/5 hover:scale-102'
+                          }
+                        `}
+                        whileHover={{ scale: isSelected ? 1.05 : 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Icon className={`w-8 h-8 mb-4 ${
+                          isSelected 
+                            ? isDark ? 'text-green-400' : 'text-green-600'
+                            : isDark ? 'text-gray-400' : 'text-gray-500'
+                        }`} />
+                        <h4 className={`font-bold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                          {action.title}
+                        </h4>
+                        <p className={`text-sm mb-3 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {action.description}
+                        </p>
+                        {action.requiresWallet && !isConnected && (
+                          <div className={`flex items-center text-xs ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                            <AlertCircle className="w-4 h-4 mr-1" />
+                            Wallet connection required
+                          </div>
+                        )}
+                        {isSelected && (
+                          <div className={`flex items-center text-sm font-medium mt-3 ${
+                            isDark ? 'text-green-400' : 'text-green-600'
+                          }`}>
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Selected
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {selectedAction && (
+                  <motion.div 
+                    className="mt-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Button
+                      onClick={() => {
+                        const action = actions.find(a => a.id === selectedAction);
+                        if (action) {
+                          if (action.requiresWallet && !isConnected) {
+                            connectWallet();
+                          } else {
+                            action.action();
+                          }
+                        }
+                      }}
+                      loading={loading}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {(() => {
+                        const action = actions.find(a => a.id === selectedAction);
+                        if (action?.requiresWallet && !isConnected) {
+                          return 'Connect Wallet to Continue';
+                        }
+                        return (
+                          <>
+                            {action?.title}
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </>
+                        );
+                      })()}
+                    </Button>
+                    
+                    <div className={`mt-4 p-3 rounded-lg text-xs ${
+                      isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'
+                    }`}>
+                      💡 <strong>Tip:</strong> {(() => {
+                        switch (selectedAction) {
+                          case 'claim':
+                            return 'This will transfer ownership of the product to your wallet address.';
+                          case 'verify-ownership':
+                            return 'This will show you who currently owns this product.';
+                          case 'verify-authenticity':
+                            return 'This will verify if the product is authentic and show manufacturer details.';
+                          default:
+                            return 'Select an action above to see more information.';
+                        }
+                      })()}
+                    </div>
+                  </motion.div>
+                )}
+              </Card>
+            </>
           )}
 
           {/* Verification Results */}
@@ -522,7 +550,7 @@ export const QRScanPage: React.FC = () => {
                         <p><strong>Product ID:</strong> {verificationResult.data.id}</p>
                         <p><strong>Serial Number:</strong> {verificationResult.data.serial}</p>
                         <p><strong>Manufacturing Date:</strong> {new Date(parseInt(verificationResult.data.date) * 1000).toLocaleDateString()}</p>
-                        <p><strong>Manufacturer:</strong> {manufacturerName}</p>
+                        {manufacturerName && <p><strong>Manufacturer:</strong> {manufacturerName}</p>}
                       </>
                     )}
                   </div>
@@ -533,13 +561,18 @@ export const QRScanPage: React.FC = () => {
               <div className="mt-6 flex gap-4">
                 <Button
                   onClick={() => {
-                    setShowActionSelection(true);
                     setVerificationResult(null);
                     setSelectedAction(null);
                   }}
                   variant="outline"
                 >
                   Try Another Action
+                </Button>
+                <Button
+                  onClick={resetScanner}
+                  variant="secondary"
+                >
+                  Scan New QR Code
                 </Button>
               </div>
             </Card>
