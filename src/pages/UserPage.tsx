@@ -195,6 +195,26 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       return;
     }
 
+    // Validate the recipient address format
+    const addressToValidate = transferToAddress.trim();
+    if (!addressToValidate.startsWith('0x')) {
+      toast.error('Recipient address must start with 0x');
+      return;
+    }
+    
+    // Check if the address contains only valid hexadecimal characters
+    const hexPattern = /^0x[0-9a-fA-F]+$/;
+    if (!hexPattern.test(addressToValidate)) {
+      toast.error('Recipient address must be a valid hexadecimal address');
+      return;
+    }
+    
+    // Check minimum length (Starknet addresses are typically 64 characters + 0x prefix)
+    if (addressToValidate.length < 10) {
+      toast.error('Recipient address is too short');
+      return;
+    }
+
     console.log('Checking addNotification function availability...');
     console.log('addNotification type:', typeof addNotification);
     console.log('addNotification function:', addNotification);
@@ -206,7 +226,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.log('Contract obtained, calling generate_change_of_ownership_code...');
       const res = await contract.generate_change_of_ownership_code(
         stringToFelt252(transferItemId),
-        transferToAddress
+        addressToValidate
       );
 
       console.log('Contract call successful, processing transaction...');
@@ -228,12 +248,12 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
       // Send notification to recipient (user B) via Supabase
       console.log('Sending notification to recipient...');
-      console.log('Recipient address:', transferToAddress);
+      console.log('Recipient address:', addressToValidate);
       console.log('Sender address:', address);
       console.log('Item details:', { transferItemId, itemName, transferCode });
       
       await sendOwnershipTransferNotification(
-        transferToAddress,
+        addressToValidate,
         transferItemId,
         itemName,
         address!,
@@ -254,11 +274,11 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
             sender_address: address,
             type: 'transfer_code_generated',
             title: 'Transfer Code Generated',
-            message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
+            message: `You generated a transfer code for "${itemName}" to be sent to ${addressToValidate.slice(0, 6)}...${addressToValidate.slice(-4)}`,
             data: {
               itemId: transferItemId,
               itemName,
-              toAddress: transferToAddress,
+              toAddress: addressToValidate,
               transferCode,
               revokeUrl: '#revoke-code'
             },
@@ -285,7 +305,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       console.error('Error type:', typeof error);
       console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      handleError(error, 'Failed to generate transfer code');
+      handleError(error, 'Failed to generate transfer code. Please check that the recipient address is valid.');
     } finally {
       setLoading(false);
     }
