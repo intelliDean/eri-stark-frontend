@@ -1050,14 +1050,14 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
                       ? 'bg-blue-500/10 border-blue-500/30'
                       : 'bg-blue-50 border-blue-200'
                   }`}>
+                    <User className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                    <h3 className={`text-xl font-bold mb-2 text-center ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                      Complete Your Registration
+                    </h3>
+                    <p className={`mb-4 text-center ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
+                      Register your account to start managing products and accessing all user features.
+                    </p>
                     <div className="text-center">
-                      <User className={`w-12 h-12 mx-auto mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-                      <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                        Complete Your Registration
-                      </h3>
-                      <p className={`mb-4 ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>
-                        Register your account to start managing products and accessing all user features.
-                      </p>
                       <Button 
                         onClick={() => {/* Navigate to registration */}}
                         variant="primary"
