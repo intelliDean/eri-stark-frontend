@@ -85,14 +85,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       console.log('Loading notifications for address:', address);
-      const normalizedAddress = normalizeAddress(address);
-      console.log('Normalized address:', normalizedAddress);
       
-      // Try both the normalized address and the original address
+      // Query for both original and normalized address to catch all notifications
+      const normalizedAddress = normalizeAddress(address);
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_address', normalizedAddress)
+        .or(`recipient_address.eq.${address},recipient_address.eq.${normalizedAddress}`)
         .order('created_at', { ascending: false });
 
       if (error) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Package, Key, Shield, Eye, Gift, RotateCcw, AlertCircle, Wallet, Copy } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { supabase } from '../utils/supabase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -242,37 +243,37 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
 
       // Send notification to sender (user A) about the generated transfer code
       console.log('Preparing to send notification to sender (self)...');
-      console.log('About to call addNotification with data:', {
-        type: 'transfer_code_generated',
-        title: 'Transfer Code Generated',
-        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
-        data: {
-          itemId: transferItemId,
-          itemName,
-          toAddress: transferToAddress,
-          transferCode,
-          revokeUrl: '#revoke-code'
-        },
-        actionUrl: '#revoke-code',
-        actionLabel: 'Revoke Code'
-      });
+      console.log('Sending revoke code notification directly to sender via Supabase...');
       
-      console.log('Calling addNotification function...');
-      await addNotification({
-        type: 'transfer_code_generated',
-        title: 'Transfer Code Generated',
-        message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
-        data: {
-          itemId: transferItemId,
-          itemName,
-          toAddress: transferToAddress,
-          transferCode,
-          revokeUrl: '#revoke-code'
-        },
-        actionUrl: '#revoke-code',
-        actionLabel: 'Revoke Code'
-      });
-      console.log('addNotification call completed successfully');
+      // Send notification directly to sender (User A) via Supabase
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .insert({
+            recipient_address: address, // Use original address, not normalized
+            sender_address: address,
+            type: 'transfer_code_generated',
+            title: 'Transfer Code Generated',
+            message: `You generated a transfer code for "${itemName}" to be sent to ${transferToAddress.slice(0, 6)}...${transferToAddress.slice(-4)}`,
+            data: {
+              itemId: transferItemId,
+              itemName,
+              toAddress: transferToAddress,
+              transferCode,
+              revokeUrl: '#revoke-code'
+            },
+            action_url: '#revoke-code',
+            action_label: 'Revoke Code'
+          });
+
+        if (error) {
+          console.error('Error sending revoke code notification:', error);
+        } else {
+          console.log('Revoke code notification sent successfully to sender');
+        }
+      } catch (error) {
+        console.error('Error sending revoke code notification:', error);
+      }
       
       toast.success(`Transfer code generated! Notifications sent to both parties.`);
       setTransferItemId('');
