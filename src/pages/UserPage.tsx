@@ -225,7 +225,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       const itemName = item?.name || transferItemId;
       console.log('Item name for notification:', itemName);
 
-      // Send notification to recipient via Supabase
+      // Send notification to recipient (user B) via Supabase
       console.log('Sending notification to recipient...');
       console.log('Recipient address:', transferToAddress);
       console.log('Sender address:', address);
@@ -240,7 +240,7 @@ export const UserPage: React.FC<UserPageProps> = ({ activeFeature }) => {
       );
       console.log('Recipient notification sent successfully');
 
-      // Also send notification to sender (user A) about the generated transfer code
+      // Send notification to sender (user A) about the generated transfer code
       console.log('Preparing to send notification to sender (self)...');
       console.log('About to call addNotification with data:', {
         type: 'transfer_code_generated',

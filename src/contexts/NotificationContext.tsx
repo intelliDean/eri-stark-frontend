@@ -224,6 +224,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const normalizedAddress = normalizeAddress(address);
     
+    console.log('=== ADD NOTIFICATION START ===');
+    console.log('Current user address:', address);
+    console.log('Normalized address:', normalizedAddress);
+    console.log('Notification data:', notification);
+    
     try {
       const { error } = await supabase
         .from('notifications')
@@ -241,7 +246,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (error) {
         console.error('Error adding notification:', error);
         toast.error('Failed to add notification');
+        return;
       }
+      
+      console.log('Notification added successfully to database');
+      console.log('=== ADD NOTIFICATION END ===');
     } catch (error) {
       console.error('Error adding notification:', error);
       toast.error('Failed to add notification');
@@ -342,26 +351,20 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     senderAddress: string,
     transferCode: string
   ) => {
+    console.log('=== SEND OWNERSHIP TRANSFER NOTIFICATION START ===');
+    console.log('Recipient address (user B):', recipientAddress);
+    console.log('Sender address (user A):', senderAddress);
+    console.log('Item details:', { itemId, itemName, transferCode });
+    
     try {
-      // Store both normalized and original addresses to ensure compatibility
+      // Normalize recipient address to ensure proper matching
       const normalizedRecipient = normalizeAddress(recipientAddress);
-      const normalizedSender = normalizeAddress(senderAddress);
-      
-      console.log('Sending notification with data:', {
-        recipient_address: recipientAddress, // Use original address format
-        sender_address: senderAddress,
-        type: 'ownership_transfer',
-        title: 'New Ownership Transfer',
-        message: `You have received ownership transfer for "${itemName}"`,
-        itemId,
-        itemName,
-        transferCode
-      });
+      console.log('Normalized recipient address:', normalizedRecipient);
 
       const { error } = await supabase
         .from('notifications')
         .insert({
-          recipient_address: recipientAddress, // Use original address format
+          recipient_address: normalizedRecipient, // Use normalized address for consistency
           sender_address: senderAddress,
           type: 'ownership_transfer',
           title: 'New Ownership Transfer',
@@ -383,8 +386,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      console.log('Notification sent successfully');
-      toast.success('Ownership transfer notification sent successfully!');
+      console.log('Ownership transfer notification sent successfully to recipient');
+      console.log('=== SEND OWNERSHIP TRANSFER NOTIFICATION END ===');
     } catch (error) {
       console.error('Error sending notification:', error);
       toast.error('Failed to send notification');
