@@ -339,12 +339,9 @@ export const QRScanPage: React.FC = () => {
                   
                   return (
                     <button
-                <p><strong>Product:</strong> {parsedData.cert?.name || parsedData.certificate?.name || 'Unknown'}</p>
-                <p><strong>ID:</strong> {parsedData.cert?.id || parsedData.cert?.unique_id || parsedData.certificate?.id || 'Unknown'}</p>
-                <p><strong>Serial:</strong> {parsedData.cert?.serial || parsedData.certificate?.serial || 'Unknown'}</p>
-                {parsedData.msgHash && (
-                  <p><strong>Signature:</strong> {parsedData.msgHash.slice(0, 10)}...{parsedData.msgHash.slice(-6)}</p>
-                )}
+                      key={action.id}
+                      onClick={() => setSelectedAction(action.id as any)}
+                      className={`
                         p-4 rounded-xl border-2 transition-all duration-300 text-left
                         ${isSelected 
                           ? isDark
@@ -356,27 +353,21 @@ export const QRScanPage: React.FC = () => {
                         }
                       `}
                     >
-                      <Icon className={`w-6 h-6 mb-3 ${
+                      <Icon className={\`w-6 h-6 mb-3 ${
                         isSelected 
                           ? isDark ? 'text-green-400' : 'text-green-600'
                           : isDark ? 'text-gray-400' : 'text-gray-500'
                       }`} />
-                      <h4 className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      <h4 className={\`font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                         {action.title}
                       </h4>
-                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <p className={\`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                         {action.description}
                       </p>
                       {action.requiresWallet && !isConnected && (
-                        <div className={`flex items-center mt-2 text-xs ${
-                          <p><strong>Product ID:</strong> {verificationResult.data.id || verificationResult.data.unique_id}</p>
-                        }`}>
-                          {verificationResult.data.date && (
-                            <p><strong>Manufacturing Date:</strong> {new Date(parseInt(verificationResult.data.date) * 1000).toLocaleDateString()}</p>
-                          )}
-                          {manufacturerName && (
-                            <p><strong>Manufacturer:</strong> {manufacturerName}</p>
-                          )}
+                        <div className={\`flex items-center mt-2 text-xs ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          Wallet connection required
                         </div>
                       )}
                     </button>
@@ -418,16 +409,16 @@ export const QRScanPage: React.FC = () => {
             <Card>
               <div className="flex items-center space-x-3 mb-4">
                 {verificationResult.success ? (
-                  <CheckCircle className={`w-6 h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                  <CheckCircle className={\`w-6 h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
                 ) : (
-                  <AlertCircle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+                  <AlertCircle className={\`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
                 )}
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <h3 className={\`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Verification Results
                 </h3>
               </div>
 
-              <div className={`p-4 rounded-xl border ${
+              <div className={\`p-4 rounded-xl border ${
                 verificationResult.success 
                   ? isDark
                     ? 'border-green-500/30 bg-green-500/10' 
@@ -436,7 +427,7 @@ export const QRScanPage: React.FC = () => {
                     ? 'border-red-500/30 bg-red-500/10'
                     : 'border-red-200 bg-red-50'
               }`}>
-                <p className={`font-medium mb-3 ${
+                <p className={\`font-medium mb-3 ${
                   verificationResult.success 
                     ? isDark ? 'text-green-300' : 'text-green-700'
                     : isDark ? 'text-red-300' : 'text-red-700'
@@ -445,7 +436,7 @@ export const QRScanPage: React.FC = () => {
                 </p>
 
                 {verificationResult.data && (
-                  <div className={`space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <div className={\`space-y-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                     {verificationResult.type === 'ownership' && (
                       <>
                         <p><strong>Item Name:</strong> {verificationResult.data.name}</p>
